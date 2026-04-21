@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast One — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#D4161A;--dark-red:#9B0E11;--black:#080808;--surface:#111;
+  --surface2:#1a1a1a;--border:rgba(255,255,255,.07);--gold:#F5A623;
+  --white:#F9F5EF;--muted:rgba(249,245,239,.4);--green:#4ade80;
+  --blue:#60a5fa;--purple:#c084fc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--black);color:var(--white);font-family:'Montserrat',sans-serif;min-height:100vh;}
+input,select,textarea,button{font-family:inherit;}
+
+/* ── LOGIN ── */
+#login-screen{
+  position:fixed;inset:0;background:var(--black);
+  display:flex;align-items:center;justify-content:center;z-index:1000;
+}
+.login-box{
+  background:var(--surface);border:2px solid var(--red);
+  padding:40px 36px;width:360px;text-align:center;
+}
+.login-box h1{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;color:var(--red);margin-bottom:6px;}
+.login-box p{font-size:.72rem;color:var(--muted);margin-bottom:28px;letter-spacing:1px;}
+.input-group{margin-bottom:14px;text-align:left;}
+.input-label{display:block;font-size:.65rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.input-field{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--white);padding:12px 14px;font-size:.85rem;outline:none;
+  transition:border-color .2s;
+}
+.input-field:focus{border-color:var(--red);}
+.input-field::placeholder{color:rgba(249,245,239,.2);}
+.btn-primary{
+  width:100%;background:var(--red);color:#fff;border:none;
+  font-weight:800;font-size:.82rem;letter-spacing:3px;text-transform:uppercase;
+  padding:15px;cursor:pointer;transition:background .2s;margin-top:6px;
+}
+.btn-primary:hover{background:var(--dark-red);}
+.login-error{color:var(--red);font-size:.72rem;margin-top:10px;min-height:18px;}
+
+/* ── APP SHELL ── */
+#app{display:none;min-height:100vh;flex-direction:column;}
+#app.visible{display:flex;}
+
+/* Top bar */
+.topbar{
+  background:var(--surface);border-bottom:3px solid var(--red);
+  padding:0 24px;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--red);}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.admin-badge{font-size:.65rem;font-weight:800;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.logout-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;cursor:pointer;transition:all .2s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* Stats strip */
+.stats-strip{
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  padding:14px 24px;display:flex;gap:24px;flex-wrap:wrap;
+}
+.stat{display:flex;flex-direction:column;gap:2px;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:var(--gold);line-height:1;}
+.stat-val.red{color:var(--red);}
+.stat-val.green{color:var(--green);}
+.stat-label{font-size:.6rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+
+/* Main layout */
+.main{display:flex;flex:1;min-height:0;}
+
+/* Sidebar */
+.sidebar{
+  width:220px;background:var(--surface);border-right:1px solid var(--border);
+  padding:20px 0;flex-shrink:0;
+  display:flex;flex-direction:column;gap:4px;
+}
+.sidebar-btn{
+  background:none;border:none;color:var(--muted);font-family:'Montserrat',sans-serif;
+  font-weight:700;font-size:.72rem;letter-spacing:2px;text-transform:uppercase;
+  padding:12px 22px;cursor:pointer;text-align:left;
+  border-left:3px solid transparent;transition:all .15s;
+  display:flex;align-items:center;gap:10px;
+}
+.sidebar-btn:hover{color:var(--white);background:rgba(255,255,255,.03);}
+.sidebar-btn.active{color:var(--white);border-left-color:var(--red);background:rgba(212,22,26,.08);}
+.sidebar-badge{
+  margin-left:auto;background:var(--red);color:#fff;
+  font-size:.55rem;padding:2px 7px;border-radius:10px;
+}
+.sidebar-section{
+  font-size:.55rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(249,245,239,.2);padding:14px 22px 6px;margin-top:8px;
+}
+
+/* Content area */
+.content{flex:1;overflow-y:auto;padding:24px;}
+
+/* Panel sections */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── SEARCH PANEL ── */
+.search-bar{
+  display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;
+}
+.search-input-wrap{flex:1;position:relative;min-width:220px;}
+.search-input-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;opacity:.4;}
+.search-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--white);padding:13px 14px 13px 42px;font-size:.85rem;outline:none;
+  transition:border-color .2s;
+}
+.search-input:focus{border-color:var(--red);}
+.search-type-select{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--white);padding:13px 14px;font-size:.78rem;font-weight:700;cursor:pointer;outline:none;
+}
+.search-type-select option{background:#1a1a1a;}
+.search-btn{
+  background:var(--red);color:#fff;border:none;
+  font-weight:800;font-size:.75rem;letter-spacing:2px;text-transform:uppercase;
+  padding:13px 24px;cursor:pointer;transition:background .2s;
+}
+.search-btn:hover{background:var(--dark-red);}
+.search-empty{text-align:center;padding:60px;color:var(--muted);font-size:.8rem;letter-spacing:2px;}
+
+/* Customer profile card */
+.customer-result{margin-bottom:32px;}
+.customer-card{
+  background:var(--surface2);border:1px solid var(--border);border-left:4px solid var(--red);
+  padding:20px 24px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;
+  margin-bottom:2px;
+}
+.customer-name{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;margin-bottom:4px;}
+.customer-phone{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--gold);}
+.customer-meta{display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;}
+.meta-item{display:flex;flex-direction:column;gap:2px;}
+.meta-val{font-weight:800;font-size:.88rem;}
+.meta-val.gold{color:var(--gold);}
+.meta-key{font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.customer-addr{font-size:.75rem;color:var(--muted);margin-top:8px;}
+.customer-notes-form{display:flex;gap:8px;margin-top:12px;}
+.customer-notes-input{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--white);padding:8px 12px;font-size:.75rem;outline:none;}
+.customer-notes-input:focus{border-color:var(--gold);}
+.notes-save-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:.65rem;font-weight:700;letter-spacing:1px;padding:8px 14px;cursor:pointer;transition:all .2s;}
+.notes-save-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* Order history timeline */
+.order-history-title{
+  font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;
+  color:var(--muted);margin-bottom:12px;padding-left:4px;
+  display:flex;align-items:center;gap:12px;
+}
+.order-history-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.order-timeline{display:flex;flex-direction:column;gap:10px;}
+.order-row{
+  background:var(--surface);border:1px solid var(--border);
+  padding:16px 18px;display:grid;
+  grid-template-columns: 110px 1fr auto;
+  gap:16px;align-items:start;
+  transition:border-color .2s;
+}
+.order-row:hover{border-color:rgba(212,22,26,.3);}
+.order-ref{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--gold);}
+.order-date{font-size:.65rem;color:var(--muted);margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.order-items{font-size:.78rem;color:rgba(249,245,239,.7);line-height:1.6;margin-bottom:6px;}
+.order-footer{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.order-total{font-weight:800;font-size:.88rem;color:var(--white);}
+.order-payment{font-size:.68rem;color:var(--muted);}
+.status-pill{
+  font-size:.6rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:4px 10px;border-radius:2px;white-space:nowrap;
+}
+.status-new{background:rgba(245,166,35,.15);color:var(--gold);}
+.status-confirmed{background:rgba(96,165,250,.15);color:var(--blue);}
+.status-preparing{background:rgba(192,132,252,.15);color:var(--purple);}
+.status-out_for_delivery{background:rgba(74,222,128,.1);color:var(--green);}
+.status-delivered{background:rgba(74,222,128,.2);color:#22c55e;}
+.status-cancelled{background:rgba(239,68,68,.1);color:#f87171;}
+.proof-thumb{width:40px;height:40px;object-fit:cover;border:2px solid var(--border);cursor:pointer;}
+.proof-thumb:hover{border-color:var(--gold);}
+.order-quick-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.quick-select{
+  background:var(--surface2);border:1px solid var(--border);color:var(--white);
+  font-size:.65rem;font-weight:700;padding:6px 9px;cursor:pointer;outline:none;
+}
+
+/* ── ORDERS TABLE ── */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);}
+.data-table{width:100%;border-collapse:collapse;min-width:900px;font-size:.75rem;}
+.data-table th{
+  background:var(--surface2);color:var(--muted);font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;padding:11px 14px;
+  text-align:left;white-space:nowrap;border-bottom:2px solid var(--red);
+  position:sticky;top:0;z-index:1;
+}
+.data-table td{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+.data-table tr:hover td{background:rgba(212,22,26,.04);}
+.data-table .col-ref{font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--gold);letter-spacing:1px;}
+.data-table .col-phone{font-family:'JetBrains Mono',monospace;font-size:.72rem;}
+.table-status-select{
+  background:transparent;border:1px solid var(--border);color:var(--white);
+  font-family:'Montserrat',sans-serif;font-size:.65rem;font-weight:700;
+  padding:5px 7px;cursor:pointer;outline:none;
+}
+.confirm-select{
+  background:transparent;border:1px solid var(--border);color:var(--white);
+  font-family:'Montserrat',sans-serif;font-size:.65rem;font-weight:700;
+  padding:5px 7px;cursor:pointer;outline:none;
+}
+.confirm-true{color:var(--green) !important;}
+.confirm-false{color:rgba(239,68,68,.7) !important;}
+.del-btn{background:none;border:none;color:rgba(239,68,68,.3);cursor:pointer;font-size:.9rem;padding:4px 8px;transition:color .15s;}
+.del-btn:hover{color:#f87171;}
+.search-customer-link{color:var(--blue);cursor:pointer;text-decoration:underline;font-size:.72rem;}
+.search-customer-link:hover{color:var(--gold);}
+
+/* Section header */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:3px;}
+.header-actions{display:flex;gap:8px;}
+.btn-sm{
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+  font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:8px 16px;cursor:pointer;transition:all .2s;
+}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold);}
+.btn-sm.danger:hover{border-color:var(--red);color:var(--red);}
+.btn-sm.primary{background:var(--red);border-color:var(--red);color:#fff;}
+.btn-sm.primary:hover{background:var(--dark-red);}
+
+/* Filter tabs */
+.filter-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;}
+.filter-tab{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-size:.65rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:8px 14px;cursor:pointer;transition:all .2s;
+}
+.filter-tab:hover{border-color:rgba(255,255,255,.2);color:var(--white);}
+.filter-tab.active{background:var(--red);border-color:var(--red);color:#fff;}
+.filter-tab .cnt{font-size:.55rem;opacity:.7;margin-left:4px;}
+
+/* Proof lightbox */
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;display:none;align-items:center;justify-content:center;}
+#lightbox.open{display:flex;}
+#lightbox img{max-width:90vw;max-height:88vh;border:3px solid var(--red);}
+#lightbox-close{position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:2.2rem;cursor:pointer;line-height:1;}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border-left:4px solid var(--red);color:var(--white);font-size:.78rem;font-weight:700;padding:12px 20px;z-index:9998;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Loading spinner */
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(212,22,26,.3);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{flex-direction:column;}
+  .stats-strip{gap:14px;}
+  .customer-card{grid-template-columns:1fr;}
+  .order-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>⚡ Fast One</h1>
+    <p>ADMIN PANEL — SECURE ACCESS</p>
+    <div class="input-group">
+      <label class="input-label">Username</label>
+      <input class="input-field" id="l-user" type="text" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Password</label>
+      <input class="input-field" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="login-btn">Login →</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-logo">⚡ Fast One Admin</div>
+    <div class="topbar-right">
+      <span class="admin-badge" id="admin-role-badge"></span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-strip" id="stats-strip">
+    <div class="stat"><span class="stat-val red" id="s-new">—</span><span class="stat-label">New Orders</span></div>
+    <div class="stat"><span class="stat-val" id="s-today">—</span><span class="stat-label">Today's Orders</span></div>
+    <div class="stat"><span class="stat-val green" id="s-revenue">—</span><span class="stat-label">Today's Revenue</span></div>
+    <div class="stat"><span class="stat-val" id="s-total">—</span><span class="stat-label">All Time Orders</span></div>
+    <div class="stat"><span class="stat-val" id="s-delivered">—</span><span class="stat-label">Delivered</span></div>
+    <div class="stat" style="margin-left:auto">
+      <span class="stat-val" style="font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace" id="s-time">—</span>
+      <span class="stat-label">Last Refreshed</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">Orders</div>
+      <button class="sidebar-btn active" data-panel="orders">
+        📋 All Orders <span class="sidebar-badge" id="nav-badge">0</span>
+      </button>
+      <div class="sidebar-section">Customers</div>
+      <button class="sidebar-btn" data-panel="search">🔍 Search Customer</button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- ── ORDERS PANEL ── -->
+      <div class="panel active" id="panel-orders">
+        <div class="section-header">
+          <div class="section-title">Order Backlog</div>
+          <div class="header-actions">
+            <button class="btn-sm" onclick="refreshOrders()">↻ Refresh</button>
+            <button class="btn-sm primary" onclick="exportCSV()">⬇ Export CSV</button>
+          </div>
+        </div>
+
+        <div class="filter-tabs" id="filter-tabs">
+          <button class="filter-tab active" data-status="all">All</button>
+          <button class="filter-tab" data-status="new">🔴 New</button>
+          <button class="filter-tab" data-status="confirmed">🔵 Confirmed</button>
+          <button class="filter-tab" data-status="preparing">🟣 Preparing</button>
+          <button class="filter-tab" data-status="out_for_delivery">🟢 Out for Delivery</button>
+          <button class="filter-tab" data-status="delivered">✅ Delivered</button>
+          <button class="filter-tab" data-status="cancelled">❌ Cancelled</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Order Ref</th>
+                <th>Customer Name</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Order</th>
+                <th>Date</th>
+                <th>Payment</th>
+                <th>Proof</th>
+                <th>Status</th>
+                <th>Confirmed</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody">
+              <tr><td colspan="12" style="text-align:center;padding:48px;color:var(--muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── SEARCH PANEL ── -->
+      <div class="panel" id="panel-search">
+        <div class="section-title" style="margin-bottom:20px">Customer Search</div>
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input class="search-input" id="search-input" placeholder="Search by phone, name, or order ref…" type="search">
+          </div>
+          <select class="search-type-select" id="search-type">
+            <option value="phone">📞 Phone</option>
+            <option value="name">👤 Name</option>
+            <option value="order_ref">🧾 Order Ref</option>
+          </select>
+          <button class="search-btn" id="search-btn">Search →</button>
+        </div>
+        <div id="search-results"><div class="search-empty">Enter a phone number, name, or order ref to search</div></div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <button id="lightbox-close">×</button>
+  <img id="lightbox-img" src="" alt="Proof">
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG — change BASE_URL to your server domain
+// ═══════════════════════════════════════════════════
+const BASE_URL = window.location.origin;   // auto-detects: http://yourserver.com
+const API      = BASE_URL + '/api/admin';
+
+let authToken    = localStorage.getItem('fo_admin_token') || '';
+let currentUser  = null;
+let currentStatus = 'all';
+let allOrders    = [];
+
+// ── UTILS ──────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function toast(msg, dur=2800){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d=new Date(iso);
+  return d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtRs(n){ return 'Rs '+parseFloat(n||0).toLocaleString(); }
+function statusClass(s){ return 'status-pill status-'+(s||'new'); }
+function statusLabel(s){
+  const m={new:'🔴 New',confirmed:'🔵 Confirmed',preparing:'🟣 Preparing',
+           out_for_delivery:'🟢 Out for Delivery',delivered:'✅ Delivered',cancelled:'❌ Cancelled'};
+  return m[s]||s;
+}
+
+async function apiFetch(path, opts={}){
+  const res = await fetch(API+path, {
+    headers: { 'Authorization': 'Bearer '+authToken, 'Content-Type': 'application/json', ...(opts.headers||{}) },
+    ...opts,
+  });
+  if(res.status===401){ logout(); return null; }
+  return res.json();
+}
+
+// ── LOGIN ──────────────────────────────────────────
+async function login(){
+  const username = $('l-user').value.trim();
+  const password = $('l-pass').value;
+  $('login-error').textContent='';
+  if(!username||!password){ $('login-error').textContent='Please enter credentials'; return; }
+  $('login-btn').disabled=true; $('login-btn').textContent='Logging in…';
+  try{
+    const res = await fetch(API+'/login',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username,password})
+    });
+    const data = await res.json();
+    if(!res.ok){ $('login-error').textContent=data.error||'Login failed'; return; }
+    authToken = data.token;
+    currentUser = { username:data.username, role:data.role };
+    localStorage.setItem('fo_admin_token', authToken);
+    showApp();
+  }catch(e){
+    $('login-error').textContent='Cannot reach server. Is the backend running?';
+  }finally{
+    $('login-btn').disabled=false; $('login-btn').textContent='Login →';
+  }
+}
+
+function logout(){
+  localStorage.removeItem('fo_admin_token');
+  authToken=''; currentUser=null;
+  $('app').classList.remove('visible');
+  $('login-screen').style.display='flex';
+  $('l-pass').value='';
+}
+
+// ── APP INIT ───────────────────────────────────────
+async function showApp(){
+  $('login-screen').style.display='none';
+  $('app').classList.add('visible');
+  if(currentUser) $('admin-role-badge').textContent=currentUser.username+' · '+currentUser.role;
+  await refreshOrders();
+  // Auto-refresh every 60 seconds
+  setInterval(refreshOrders, 60000);
+}
+
+// Try to restore session
+if(authToken){
+  apiFetch('/orders?limit=1').then(data=>{
+    if(data){ showApp(); }
+    else{ authToken=''; localStorage.removeItem('fo_admin_token'); }
+  });
+}
+
+// ── SIDEBAR NAVIGATION ──────────────────────────────
+document.querySelectorAll('.sidebar-btn[data-panel]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    $('panel-'+btn.dataset.panel).classList.add('active');
+  });
+});
+
+// ── ORDERS ─────────────────────────────────────────
+async function refreshOrders(){
+  const data = await apiFetch('/orders?limit=200&status='+currentStatus);
+  if(!data) return;
+  allOrders = data.orders || [];
+  renderOrdersTable(allOrders);
+  updateStats(data.stats);
+  $('s-time').textContent = new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+  $('nav-badge').textContent = allOrders.length;
+}
+
+function updateStats(s){
+  if(!s) return;
+  $('s-new').textContent     = s.new_count || 0;
+  $('s-today').textContent   = s.today_count || 0;
+  $('s-revenue').textContent = fmtRs(s.today_revenue || 0);
+  $('s-total').textContent   = s.total || 0;
+  $('s-delivered').textContent = s.delivered || 0;
+}
+
+function renderOrdersTable(orders){
+  const tbody=$('orders-tbody'); tbody.innerHTML='';
+  if(!orders.length){
+    tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:48px;color:var(--muted)">No orders found</td></tr>';
+    return;
+  }
+  orders.forEach((o,idx)=>{
+    const proofHtml = (() => {
+      const receipt = o.receipt_image_url; // WhatsApp upload via n8n (real file)
+      const web     = o.jazz_proof_url;    // Website base64 upload
+      if (!receipt && !web) return '<span style="color:var(--muted);font-size:.7rem">—</span>';
+      let html = '';
+      if (receipt) html += `<img class="proof-thumb" src="${BASE_URL+receipt}" onclick="openLightbox('${BASE_URL+receipt}')" alt="WhatsApp Receipt" title="WhatsApp Receipt">`;
+      if (web)     html += `<img class="proof-thumb" src="${web.startsWith('data:') ? web : BASE_URL+web}" onclick="openLightbox('${web.startsWith('data:') ? web : BASE_URL+web}')" alt="Website Upload" title="Website Upload" style="margin-left:4px;opacity:.75">`;
+      return html;
+    })();
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--muted);font-size:.68rem">${orders.length-idx}</td>
+      <td class="col-ref">${o.order_ref}</td>
+      <td>
+        <div style="font-weight:700;font-size:.8rem">${o.customer_name}</div>
+        <div class="search-customer-link" onclick="searchByPhone('${o.customer_phone}')">${o.customer_phone}</div>
+      </td>
+      <td class="col-phone">${o.customer_phone}</td>
+      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${o.delivery_address||''}">${o.delivery_address||'—'}</td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${o.items_summary||''}">${o.items_summary||'—'}</td>
+      <td style="white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:.68rem">${fmtDate(o.created_at)}</td>
+      <td>${o.payment_method}</td>
+      <td>${proofHtml}</td>
+      <td>
+        <select class="table-status-select" onchange="updateStatus(${o.id},this.value,this)">
+          ${['new','confirmed','preparing','out_for_delivery','delivered','cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusLabel(s)}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select class="confirm-select ${o.payment_confirmed?'confirm-true':'confirm-false'}" onchange="updateConfirm(${o.id},this.value,this)">
+          <option value="false" ${!o.payment_confirmed?'selected':''}>FALSE</option>
+          <option value="true"  ${o.payment_confirmed?'selected':''}>TRUE</option>
+        </select>
+      </td>
+      <td><button class="del-btn" onclick="deleteOrder(${o.id},this)">🗑</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function updateStatus(id, status, el){
+  const data = await apiFetch('/orders/'+id, { method:'PATCH', body: JSON.stringify({status}) });
+  if(data?.success){ toast('✅ Order updated → '+status); }
+  else{ toast('❌ Update failed'); el.value=el.dataset.prev; }
+}
+
+async function updateConfirm(id, val, el){
+  el.className='confirm-select '+(val==='true'?'confirm-true':'confirm-false');
+  const data = await apiFetch('/orders/'+id, { method:'PATCH', body: JSON.stringify({status:el.closest('tr').querySelector('.table-status-select').value, confirmed:val==='true'}) });
+  if(data?.success) toast('✅ Confirmation updated');
+  else toast('❌ Update failed');
+}
+
+async function deleteOrder(id, btn){
+  if(!confirm('Delete this order permanently?')) return;
+  const data = await apiFetch('/orders/'+id, { method:'DELETE' });
+  if(data?.success){ btn.closest('tr').remove(); toast('🗑 Order deleted'); }
+  else toast('❌ Delete failed');
+}
+
+// Filter tabs
+document.querySelectorAll('.filter-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentStatus=btn.dataset.status;
+    refreshOrders();
+  });
+});
+
+// ── SEARCH ─────────────────────────────────────────
+async function doSearch(){
+  const q    = $('search-input').value.trim();
+  const type = $('search-type').value;
+  if(!q){ toast('⚠️ Enter a search term'); return; }
+
+  $('search-btn').disabled=true; $('search-btn').innerHTML='<span class="spinner"></span>';
+  const res = $('search-results');
+  res.innerHTML='<div class="search-empty"><span class="spinner"></span> Searching…</div>';
+
+  const data = await apiFetch('/search?q='+encodeURIComponent(q)+'&type='+type);
+  $('search-btn').disabled=false; $('search-btn').textContent='Search →';
+
+  if(!data){ res.innerHTML='<div class="search-empty">Error — please try again</div>'; return; }
+  if(!data.found){ res.innerHTML='<div class="search-empty">No results found for "'+q+'"</div>'; return; }
+
+  renderSearchResults(data.customers);
+}
+
+function renderSearchResults(customers){
+  const res=$('search-results'); res.innerHTML='';
+
+  customers.forEach(({customer:c, orders})=>{
+    const div=document.createElement('div'); div.className='customer-result';
+
+    div.innerHTML=`
+      <div class="customer-card">
+        <div>
+          <div class="customer-name">${c.name}</div>
+          <div class="customer-phone">${c.phone}</div>
+          <div class="customer-meta">
+            <div class="meta-item"><span class="meta-val gold">${c.totalOrders}</span><span class="meta-key">Orders</span></div>
+            <div class="meta-item"><span class="meta-val gold">${fmtRs(c.totalSpent)}</span><span class="meta-key">Total Spent</span></div>
+            <div class="meta-item"><span class="meta-val">${fmtDate(c.firstSeen)}</span><span class="meta-key">First Order</span></div>
+            <div class="meta-item"><span class="meta-val">${fmtDate(c.lastSeen)}</span><span class="meta-key">Last Active</span></div>
+          </div>
+          <div class="customer-addr">📍 ${c.address||'No address saved'} ${c.area?'· '+c.area:''}</div>
+          <div class="customer-notes-form">
+            <input class="customer-notes-input" id="notes-${c.id}" placeholder="Admin notes about this customer…" value="${c.notes||''}">
+            <button class="notes-save-btn" onclick="saveNotes(${c.id})">Save Note</button>
+          </div>
+        </div>
+        <div>
+          <span class="${statusClass(orders[0]?.status||'new')}">${statusLabel(orders[0]?.status||'')}</span>
+        </div>
+      </div>
+
+      <div style="margin-top:2px;margin-bottom:10px;padding:0 4px">
+        <div class="order-history-title">Order History (${orders.length})</div>
+        <div class="order-timeline" id="timeline-${c.id}">
+          ${orders.length===0
+            ? '<div style="color:var(--muted);font-size:.78rem;padding:16px">No orders yet</div>'
+            : orders.map(o=>`
+              <div class="order-row">
+                <div>
+                  <div class="order-ref">${o.orderRef}</div>
+                  <div class="order-date">${fmtDate(o.createdAt)}</div>
+                  <div class="order-date" style="margin-top:2px">📍 ${o.address||'—'}${o.area?' · '+o.area:''}</div>
+                </div>
+                <div>
+                  <div class="order-items">${o.itemsSummary}</div>
+                  <div class="order-footer">
+                    <span class="order-total">${fmtRs(o.total)}</span>
+                    <span class="order-payment">· ${o.paymentMethod}</span>
+                    <span class="${statusClass(o.status)}">${statusLabel(o.status)}</span>
+                    ${o.paymentConfirmed?'<span style="color:var(--green);font-size:.65rem;font-weight:800">✓ PAID</span>':''}
+                    ${o.notes?`<span style="color:var(--muted);font-size:.68rem">📝 ${o.notes}</span>`:''}
+                  </div>
+                </div>
+                <div class="order-quick-actions">
+                  ${(()=>{
+                    if(o.receiptImageUrl) return `<img class="proof-thumb" src="${BASE_URL+o.receiptImageUrl}" onclick="openLightbox('${BASE_URL+o.receiptImageUrl}')" title="WhatsApp Receipt">`;
+                    if(o.jazzProofUrl)   return `<img class="proof-thumb" src="${o.jazzProofUrl.startsWith('data:') ? o.jazzProofUrl : BASE_URL+o.jazzProofUrl}" onclick="openLightbox('${o.jazzProofUrl.startsWith('data:') ? o.jazzProofUrl : BASE_URL+o.jazzProofUrl}')" title="Website Upload">`;
+                    return '';
+                  })()}
+                  <select class="quick-select" onchange="updateStatus(${o.id},this.value,this)">
+                    ${['new','confirmed','preparing','out_for_delivery','delivered','cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusLabel(s)}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+            `).join('')
+          }
+        </div>
+      </div>
+    `;
+    res.appendChild(div);
+  });
+}
+
+async function saveNotes(customerId){
+  const notes = $('notes-'+customerId).value;
+  const data  = await apiFetch('/customers/'+customerId+'/notes', { method:'PATCH', body: JSON.stringify({notes}) });
+  if(data?.success) toast('✅ Notes saved'); else toast('❌ Failed to save notes');
+}
+
+function searchByPhone(phone){
+  // Switch to search panel and auto-search
+  document.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('.sidebar-btn[data-panel="search"]').classList.add('active');
+  $('panel-search').classList.add('active');
+  $('search-input').value = phone;
+  $('search-type').value  = 'phone';
+  doSearch();
+}
+
+// ── EXPORT CSV ─────────────────────────────────────
+function exportCSV(){
+  if(!allOrders.length){ toast('No orders to export'); return; }
+  const headers=['Order Ref','Customer Name','Phone','Address','Order','Date','Payment','Status','Confirmed','Total (Rs)'];
+  const rows=allOrders.map(o=>[
+    o.order_ref, o.customer_name, o.customer_phone,
+    o.delivery_address||'', o.items_summary||'',
+    fmtDate(o.created_at), o.payment_method,
+    o.status, o.payment_confirmed?'TRUE':'FALSE', o.total
+  ]);
+  const csv=[headers,...rows].map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='FastOne_Orders_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  toast('✅ CSV downloaded');
+}
+
+// ── LIGHTBOX ───────────────────────────────────────
+function openLightbox(src){ $('lightbox-img').src=src; $('lightbox').classList.add('open'); }
+$('lightbox-close').addEventListener('click',()=>$('lightbox').classList.remove('open'));
+$('lightbox').addEventListener('click',e=>{ if(e.target===$('lightbox')) $('lightbox').classList.remove('open'); });
+
+// ── EVENT WIRING ───────────────────────────────────
+$('login-btn').addEventListener('click', login);
+$('l-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') login(); });
+$('search-btn').addEventListener('click', doSearch);
+$('search-input').addEventListener('keydown', e=>{ if(e.key==='Enter') doSearch(); });
+</script>
+</body>
+</html>
