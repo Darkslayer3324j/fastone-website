@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="Fast One - Premium Pizza, Burgers, Shawarma and More. Free delivery in Wapda City, Faisalabad." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Fast One - Order Online</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
+  <style>
+    :root{--red:#e8191e;--red-dim:rgba(232,25,30,.15);--red-glow:rgba(232,25,30,.35);--black:#0a0a0a;--surface:#111113;--surface2:#18181b;--surface3:#222226;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);--white:#fafaf9;--muted:rgba(250,250,249,.45);--muted2:rgba(250,250,249,.25);--gold:#f59e0b;--green:#22c55e;--font-disp:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;--radius:12px;--radius-sm:8px;--shadow:0 24px 64px rgba(0,0,0,.6);--transition:.22s cubic-bezier(.4,0,.2,1)}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{background:var(--black);color:var(--white);font-family:var(--font-body);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+    img{display:block;max-width:100%}
+    button{cursor:pointer;border:none;background:none;font-family:inherit}
+    input,textarea,select{font-family:inherit}
+    a{text-decoration:none;color:inherit}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
+    #nav{position:fixed;top:0;left:0;right:0;z-index:900;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(10,10,10,.88);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid var(--border);transition:background var(--transition)}
+    .nav-logo{font-family:var(--font-disp);font-size:1.4rem;font-weight:900;letter-spacing:-.5px;color:var(--white)}
+    .nav-logo span{color:var(--red)}
+    .nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+    .nav-links a{font-size:.8rem;font-weight:500;letter-spacing:.5px;color:var(--muted);transition:color var(--transition)}
+    .nav-links a:hover{color:var(--white)}
+    .nav-right{display:flex;align-items:center;gap:.75rem}
+    #nav-cart-btn{position:relative;display:flex;align-items:center;gap:.5rem;background:var(--surface2);border:1px solid var(--border2);color:var(--white);padding:.5rem 1rem;border-radius:var(--radius-sm);font-size:.82rem;font-weight:600;transition:background var(--transition),border-color var(--transition),transform var(--transition)}
+    #nav-cart-btn:hover{background:var(--surface3);border-color:var(--red);transform:translateY(-1px)}
+    #nav-cart-btn svg{width:18px;height:18px}
+    #nav-cart-count{position:absolute;top:-7px;right:-7px;background:var(--red);color:#fff;font-size:.62rem;font-weight:700;min-width:18px;height:18px;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 4px;transform:scale(0);transition:transform var(--transition)}
+    #nav-cart-count.visible{transform:scale(1)}
+    #nav-menu-btn{display:none;flex-direction:column;gap:5px;padding:6px;border-radius:6px}
+    #nav-menu-btn span{display:block;width:22px;height:2px;background:var(--white);border-radius:99px;transition:transform var(--transition),opacity var(--transition)}
+    #nav-menu-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+    #nav-menu-btn.open span:nth-child(2){opacity:0}
+    #nav-menu-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+    #mobile-nav{position:fixed;top:64px;left:0;right:0;z-index:850;background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 5%;transform:translateY(-110%);transition:transform var(--transition)}
+    #mobile-nav.open{transform:translateY(0)}
+    #mobile-nav a{display:block;padding:.75rem 0;font-size:.95rem;font-weight:500;color:var(--muted);border-bottom:1px solid var(--border);transition:color var(--transition)}
+    #mobile-nav a:last-child{border-bottom:none}
+    #mobile-nav a:hover{color:var(--white)}
+    #hero{min-height:100svh;display:flex;align-items:center;justify-content:center;text-align:center;padding:7rem 5% 6rem;position:relative;overflow:hidden}
+    .hero-bg{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 70% 55% at 50% 65%,rgba(232,25,30,.13) 0%,transparent 65%),radial-gradient(ellipse 40% 30% at 15% 20%,rgba(232,25,30,.06) 0%,transparent 50%)}
+    .hero-grid{position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 20%,transparent 80%)}
+    .hero-content{position:relative;z-index:1;max-width:780px}
+    .hero-eyebrow{display:inline-flex;align-items:center;gap:.5rem;background:var(--red-dim);border:1px solid rgba(232,25,30,.3);color:var(--red);font-size:.72rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:.35rem .9rem;border-radius:99px;margin-bottom:1.5rem;animation:fadeUp .6s ease both}
+    .hero-eyebrow::before{content:'*';font-size:.6rem;animation:blink 2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .hero-h1{font-family:var(--font-disp);font-size:clamp(3.2rem,9vw,7rem);font-weight:900;line-height:.95;letter-spacing:-2px;margin-bottom:1.25rem;animation:fadeUp .7s .1s ease both}
+    .hero-h1 em{font-style:normal;color:var(--red)}
+    .hero-sub{font-size:clamp(.9rem,2vw,1.1rem);font-weight:300;color:var(--muted);max-width:520px;margin:0 auto 2.5rem;animation:fadeUp .7s .2s ease both}
+    .hero-ctas{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;animation:fadeUp .7s .3s ease both}
+    .btn-primary{display:inline-flex;align-items:center;gap:.5rem;background:var(--red);color:#fff;font-size:.88rem;font-weight:600;letter-spacing:.3px;padding:.85rem 1.75rem;border-radius:var(--radius-sm);transition:background var(--transition),transform var(--transition),box-shadow var(--transition)}
+    .btn-primary:hover{background:#c8151a;transform:translateY(-2px);box-shadow:0 8px 28px var(--red-glow)}
+    .btn-secondary{display:inline-flex;align-items:center;gap:.5rem;background:var(--surface2);border:1px solid var(--border2);color:var(--white);font-size:.88rem;font-weight:500;padding:.85rem 1.75rem;border-radius:var(--radius-sm);transition:background var(--transition),transform var(--transition),border-color var(--transition)}
+    .btn-secondary:hover{background:var(--surface3);transform:translateY(-2px);border-color:rgba(255,255,255,.25)}
+    .hero-stats{position:absolute;bottom:-1px;left:0;right:0;z-index:2;display:flex;justify-content:center}
+    .stats-bar{display:flex;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;overflow:hidden;max-width:560px;width:100%}
+    .stat-item{flex:1;padding:.9rem 1.25rem;text-align:center;border-right:1px solid var(--border)}
+    .stat-item:last-child{border-right:none}
+    .stat-val{font-family:var(--font-disp);font-size:1.3rem;font-weight:800;color:var(--red)}
+    .stat-lbl{font-size:.62rem;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:1px}
+    #category-nav{position:sticky;top:64px;z-index:800;background:rgba(10,10,10,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 5%;overflow-x:auto;scrollbar-width:none}
+    #category-nav::-webkit-scrollbar{display:none}
+    .cat-tabs{display:flex;min-width:max-content}
+    .cat-tab{display:flex;align-items:center;gap:.4rem;padding:1rem 1.1rem;font-size:.78rem;font-weight:600;letter-spacing:.3px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--transition),border-color var(--transition)}
+    .cat-tab:hover{color:var(--white)}
+    .cat-tab.active{color:var(--red);border-bottom-color:var(--red)}
+    #menu-section{padding:3rem 5% 5rem}
+    .section-heading{font-family:var(--font-disp);font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;letter-spacing:-1px;margin-bottom:.4rem}
+    .section-heading em{font-style:normal;color:var(--red)}
+    .section-sub{color:var(--muted);font-size:.88rem;font-weight:300;margin-bottom:2.5rem}
+    .menu-category{margin-bottom:3.5rem;padding:0 5%}
+    .cat-title{display:flex;align-items:center;gap:.75rem;font-family:var(--font-disp);font-size:1.25rem;font-weight:800;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+    .cat-badge{background:var(--red-dim);color:var(--red);font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:.25rem .6rem;border-radius:99px}
+    .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
+    .menu-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition);display:flex;flex-direction:column}
+    .menu-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.5),0 0 0 1px rgba(232,25,30,.2);border-color:rgba(232,25,30,.3)}
+    .card-img-wrap{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--surface2)}
+    .card-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+    .menu-card:hover .card-img-wrap img{transform:scale(1.07)}
+    .card-img-wrap::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(transparent,rgba(10,10,10,.65));pointer-events:none}
+    .card-badge{position:absolute;top:.6rem;left:.6rem;z-index:1;background:var(--red);color:#fff;font-size:.58rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:.2rem .5rem;border-radius:4px}
+    .card-body{padding:1rem 1rem .9rem;display:flex;flex-direction:column;gap:.35rem;flex:1}
+    .card-name{font-family:var(--font-disp);font-size:1rem;font-weight:800;line-height:1.2}
+    .card-desc{font-size:.75rem;font-weight:300;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5}
+    .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:.6rem}
+    .card-price{font-family:var(--font-disp);font-size:1.1rem;font-weight:800;color:var(--white)}
+    .card-price .price-from{font-size:.62rem;font-weight:400;color:var(--muted);margin-right:.2rem}
+    .card-add-btn{width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;line-height:1;transition:background var(--transition),transform var(--transition),box-shadow var(--transition);flex-shrink:0}
+    .card-add-btn:hover{background:#c8151a;transform:scale(1.12);box-shadow:0 4px 14px var(--red-glow)}
+    #item-modal{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,0);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);pointer-events:none;transition:background .3s ease,backdrop-filter .3s ease}
+    #item-modal.open{background:rgba(0,0,0,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);pointer-events:all}
+    .modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;overflow-x:hidden;transform:scale(.93) translateY(20px);opacity:0;transition:transform .32s cubic-bezier(.34,1.4,.64,1),opacity .28s ease;scrollbar-width:none;box-shadow:0 40px 80px rgba(0,0,0,.65)}
+    #item-modal.open .modal-box{transform:scale(1) translateY(0);opacity:1}
+    .modal-box::-webkit-scrollbar{display:none}
+    .modal-img-wrap{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--surface2)}
+    .modal-img-wrap img{width:100%;height:100%;object-fit:cover}
+    .modal-close{position:absolute;top:.75rem;right:.75rem;z-index:1;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:background var(--transition),transform var(--transition)}
+    .modal-close:hover{background:var(--red);transform:scale(1.08)}
+    .modal-body{padding:1.5rem}
+    .modal-cat-label{font-size:.65rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:.4rem}
+    .modal-name{font-family:var(--font-disp);font-size:1.6rem;font-weight:900;letter-spacing:-.5px;margin-bottom:.6rem;line-height:1.1}
+    .modal-desc{font-size:.88rem;font-weight:300;color:var(--muted);line-height:1.7;margin-bottom:1.25rem}
+    .size-section{margin-bottom:1.25rem}
+    .size-label{font-size:.72rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;display:block}
+    .size-options{display:flex;gap:.5rem;flex-wrap:wrap}
+    .size-opt{flex:1;min-width:80px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:.6rem .75rem;text-align:center;cursor:pointer;transition:border-color var(--transition),background var(--transition)}
+    .size-opt.selected{border-color:var(--red);background:var(--red-dim)}
+    .size-opt:hover:not(.selected){border-color:rgba(255,255,255,.25)}
+    .size-opt-name{font-size:.72rem;font-weight:600;color:var(--muted)}
+    .size-opt.selected .size-opt-name{color:var(--red)}
+    .size-opt-price{font-family:var(--font-disp);font-size:1rem;font-weight:800;margin-top:.1rem}
+    .modal-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;border-top:1px solid var(--border);padding:1rem 1.5rem;background:var(--surface);position:sticky;bottom:0}
+    .modal-price-display{font-family:var(--font-disp);font-size:1.5rem;font-weight:900}
+    .modal-qty{display:flex;align-items:center;gap:.6rem;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.3rem .4rem}
+    .qty-btn{width:30px;height:30px;border-radius:6px;background:var(--surface3);color:var(--white);font-size:1.1rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background var(--transition)}
+    .qty-btn:hover{background:var(--red)}
+    .qty-num{font-weight:700;font-size:.92rem;min-width:20px;text-align:center}
+    .modal-add-btn{flex:1;background:var(--red);color:#fff;font-size:.88rem;font-weight:600;padding:.75rem 1.25rem;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;gap:.4rem;transition:background var(--transition),transform var(--transition),box-shadow var(--transition)}
+    .modal-add-btn:hover{background:#c8151a;transform:translateY(-1px);box-shadow:0 6px 20px var(--red-glow)}
+    #cart-overlay{position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s ease}
+    #cart-overlay.open{background:rgba(0,0,0,.62);pointer-events:all}
+    #cart-drawer{position:fixed;top:0;right:0;bottom:0;z-index:1600;width:min(420px,100vw);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);box-shadow:-24px 0 64px rgba(0,0,0,.5)}
+    #cart-drawer.open{transform:translateX(0)}
+    .cart-hdr{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0}
+    .cart-hdr-left{display:flex;align-items:center;gap:.6rem}
+    .cart-hdr-title{font-family:var(--font-disp);font-size:1.15rem;font-weight:800}
+    .cart-item-count{background:var(--red);color:#fff;font-size:.65rem;font-weight:700;padding:.15rem .45rem;border-radius:99px}
+    .cart-close-btn{width:34px;height:34px;border-radius:8px;background:var(--surface2);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background var(--transition),color var(--transition)}
+    .cart-close-btn:hover{background:var(--red-dim);color:var(--red)}
+    .cart-items-list{flex:1;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+    .cart-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;color:var(--muted2);text-align:center;padding:2rem}
+    .cart-empty-state svg{width:52px;height:52px;opacity:.3}
+    .cart-empty-state p{font-size:.82rem;font-weight:300}
+    .cart-item{display:flex;gap:.8rem;align-items:flex-start;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem;animation:slideInRight .2s ease}
+    @keyframes slideInRight{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+    .cart-item-img{width:56px;height:56px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--surface3)}
+    .cart-item-details{flex:1;min-width:0}
+    .cart-item-name{font-size:.82rem;font-weight:600;line-height:1.3}
+    .cart-item-variant{font-size:.68rem;color:var(--muted);margin-top:2px}
+    .cart-item-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:.5rem}
+    .cart-item-price{font-family:var(--font-disp);font-size:1rem;font-weight:800;color:var(--white)}
+    .cart-qty-controls{display:flex;align-items:center;gap:.35rem}
+    .cq-btn{width:24px;height:24px;border-radius:5px;background:var(--surface3);color:var(--white);font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background var(--transition)}
+    .cq-btn:hover{background:var(--red)}
+    .cq-num{font-size:.78rem;font-weight:700;min-width:16px;text-align:center}
+    .cart-item-del{color:var(--muted2);font-size:.88rem;padding:4px 6px;border-radius:4px;transition:color var(--transition),background var(--transition)}
+    .cart-item-del:hover{color:#f87171;background:rgba(248,113,113,.1)}
+    .cart-ftr{flex-shrink:0;border-top:1px solid var(--border);padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+    .cart-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);padding:.25rem 0}
+    .cart-row.grand{font-size:1rem;font-weight:700;color:var(--white);border-top:1px solid var(--border);padding-top:.6rem;margin-top:.25rem}
+    .cart-row.grand .cart-row-val{font-family:var(--font-disp);font-size:1.2rem;color:var(--white)}
+    #open-checkout-btn{width:100%;background:var(--red);color:#fff;font-size:.92rem;font-weight:600;letter-spacing:.3px;padding:1rem;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;gap:.5rem;transition:background var(--transition),transform var(--transition),box-shadow var(--transition)}
+    #open-checkout-btn:hover:not(:disabled){background:#c8151a;transform:translateY(-1px);box-shadow:0 8px 24px var(--red-glow)}
+    #open-checkout-btn:disabled{background:var(--surface3);color:var(--muted2);cursor:not-allowed}
+    #open-checkout-btn svg{width:18px}
+    #checkout-modal{position:fixed;inset:0;z-index:2500;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .25s ease}
+    #checkout-modal.open{opacity:1;pointer-events:all}
+    .checkout-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:500px;max-height:90dvh;overflow-y:auto;scrollbar-width:none;transform:translateY(18px);transition:transform .3s cubic-bezier(.34,1.4,.64,1);box-shadow:0 40px 80px rgba(0,0,0,.7)}
+    #checkout-modal.open .checkout-box{transform:translateY(0)}
+    .checkout-box::-webkit-scrollbar{display:none}
+    .checkout-hdr{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1}
+    .checkout-title{font-family:var(--font-disp);font-size:1.2rem;font-weight:800}
+    .checkout-close-btn{width:34px;height:34px;border-radius:8px;background:var(--surface2);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background var(--transition),color var(--transition)}
+    .checkout-close-btn:hover{background:var(--red-dim);color:var(--red)}
+    .checkout-body{padding:1.5rem;display:flex;flex-direction:column;gap:1.1rem}
+    .order-summary{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem}
+    .order-summary-title{font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem}
+    .summary-item{display:flex;justify-content:space-between;font-size:.8rem;padding:.3rem 0;border-bottom:1px solid var(--border);color:var(--muted)}
+    .summary-item:last-child{border-bottom:none}
+    .summary-total{display:flex;justify-content:space-between;font-weight:700;font-size:.92rem;color:var(--white);padding-top:.6rem;margin-top:.4rem;border-top:1px solid var(--border2)}
+    .summary-total span:last-child{font-family:var(--font-disp);font-size:1.1rem}
+    .form-group{display:flex;flex-direction:column;gap:.4rem}
+    .form-label{font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+    .form-input,.form-textarea{background:var(--surface2);border:1px solid var(--border2);color:var(--white);padding:.75rem 1rem;border-radius:var(--radius-sm);font-size:.88rem;outline:none;transition:border-color var(--transition),box-shadow var(--transition);width:100%}
+    .form-input:focus,.form-textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+    .form-input::placeholder,.form-textarea::placeholder{color:var(--muted2)}
+    .form-textarea{resize:vertical;min-height:80px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+    .payment-opts{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+    .pay-opt{border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:.75rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;transition:border-color var(--transition),background var(--transition)}
+    .pay-opt.selected{border-color:var(--red);background:var(--red-dim)}
+    .pay-opt:hover:not(.selected){border-color:rgba(255,255,255,.25)}
+    .pay-opt input{display:none}
+    .pay-icon{font-size:1.3rem;flex-shrink:0}
+    .pay-label{font-size:.8rem;font-weight:600}
+    #jazz-upload-section{display:none}
+    #jazz-drop-zone{border:2px dashed rgba(232,25,30,.4);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;background:var(--red-dim);transition:border-color var(--transition),background var(--transition)}
+    #jazz-drop-zone:hover,#jazz-drop-zone.drag-over{border-color:var(--red);background:rgba(232,25,30,.12)}
+    #jazz-drop-zone.uploaded{border-color:var(--green);border-style:solid;background:rgba(34,197,94,.08)}
+    #jazz-drop-zone .dz-icon{font-size:2rem;margin-bottom:.4rem}
+    #jazz-drop-zone .dz-text{font-size:.8rem;color:var(--muted)}
+    #jazz-drop-zone .dz-sub{font-size:.68rem;color:var(--muted2);margin-top:.2rem}
+    #jazz-preview{max-width:100%;max-height:180px;border-radius:6px;margin:0 auto .5rem;display:none}
+    #jazz-file-input{display:none}
+    #place-order-btn{width:100%;background:var(--red);color:#fff;font-size:.95rem;font-weight:600;letter-spacing:.3px;padding:1.1rem;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;gap:.5rem;transition:background var(--transition),transform var(--transition),box-shadow var(--transition);margin-top:.25rem}
+    #place-order-btn:hover:not(:disabled){background:#c8151a;transform:translateY(-1px);box-shadow:0 8px 24px var(--red-glow)}
+    #place-order-btn:disabled{background:var(--surface3);color:var(--muted2);cursor:not-allowed}
+    #success-modal{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.82);backdrop-filter:blur(16px);opacity:0;pointer-events:none;transition:opacity .25s ease}
+    #success-modal.open{opacity:1;pointer-events:all}
+    .success-box{background:var(--surface);border:1px solid rgba(34,197,94,.3);border-radius:16px;padding:2.5rem;width:100%;max-width:420px;text-align:center;transform:scale(.9);transition:transform .35s cubic-bezier(.34,1.4,.64,1);box-shadow:0 0 60px rgba(34,197,94,.15)}
+    #success-modal.open .success-box{transform:scale(1)}
+    .success-icon{font-size:3.5rem;margin-bottom:1rem}
+    .success-title{font-family:var(--font-disp);font-size:1.8rem;font-weight:900;color:var(--green);margin-bottom:.5rem}
+    .success-id{display:inline-block;background:var(--surface2);border:1px solid var(--border2);font-family:monospace;font-size:1rem;letter-spacing:2px;padding:.4rem 1rem;border-radius:6px;margin:.75rem 0}
+    .success-msg{font-size:.85rem;font-weight:300;color:var(--muted);line-height:1.6;margin-bottom:1.5rem}
+    .success-actions{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
+    .wa-btn{display:inline-flex;align-items:center;gap:.45rem;background:#25D366;color:#fff;font-size:.82rem;font-weight:600;padding:.7rem 1.25rem;border-radius:var(--radius-sm);transition:opacity var(--transition),transform var(--transition)}
+    .wa-btn:hover{opacity:.88;transform:translateY(-1px)}
+    .done-btn{display:inline-flex;align-items:center;gap:.45rem;background:var(--surface2);border:1px solid var(--border2);color:var(--white);font-size:.82rem;font-weight:600;padding:.7rem 1.25rem;border-radius:var(--radius-sm);transition:background var(--transition),transform var(--transition)}
+    .done-btn:hover{background:var(--surface3);transform:translateY(-1px)}
+    #toast-container{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9000;display:flex;flex-direction:column;gap:.5rem;align-items:center;pointer-events:none}
+    .toast{display:flex;align-items:center;gap:.6rem;background:var(--surface2);border:1px solid var(--border2);backdrop-filter:blur(12px);padding:.65rem 1.1rem;border-radius:99px;font-size:.8rem;font-weight:500;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toastIn .3s cubic-bezier(.34,1.4,.64,1) both}
+    .toast.removing{animation:toastOut .25s ease forwards}
+    .toast.success{border-color:rgba(34,197,94,.35)}
+    .toast.error{border-color:rgba(232,25,30,.35)}
+    .toast-icon{font-size:1rem;flex-shrink:0}
+    @keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.95)}to{opacity:1;transform:none}}
+    @keyframes toastOut{to{opacity:0;transform:translateY(-8px) scale(.95)}}
+    footer{background:var(--surface);border-top:1px solid var(--border);padding:3rem 5% 2rem}
+    .footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:3rem;margin-bottom:2rem}
+    .footer-brand h3{font-family:var(--font-disp);font-size:1.4rem;font-weight:900;margin-bottom:.5rem}
+    .footer-brand h3 span{color:var(--red)}
+    .footer-brand p{font-size:.82rem;font-weight:300;color:var(--muted);line-height:1.6}
+    .footer-col h4{font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem}
+    .footer-col a{display:block;font-size:.82rem;font-weight:300;color:var(--muted);margin-bottom:.4rem;transition:color var(--transition)}
+    .footer-col a:hover{color:var(--white)}
+    .footer-bottom{border-top:1px solid var(--border);padding-top:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;font-size:.72rem;color:var(--muted2)}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity .55s ease,transform .55s ease}
+    .reveal.visible{opacity:1;transform:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}.footer-brand{grid-column:1/-1}}
+    @media(max-width:640px){#nav{padding:0 4%}.nav-links{display:none}#nav-menu-btn{display:flex}.menu-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem}.form-grid{grid-template-columns:1fr}.payment-opts{grid-template-columns:1fr}.footer-grid{grid-column:1fr;gap:1.75rem}#menu-section{padding:2rem 4% 4rem}.menu-category{padding:0 4%}}
+    @media(max-width:400px){.menu-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<nav id="nav">
+  <a href="#" class="nav-logo">Fast<span>One</span></a>
+  <ul class="nav-links"><li><a href="#menu-section">Menu</a></li><li><a href="#contact">Contact</a></li></ul>
+  <div class="nav-right">
+    <button id="nav-cart-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Cart <span id="nav-cart-count">0</span>
+    </button>
+    <button id="nav-menu-btn"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<div id="mobile-nav">
+  <a href="#menu-section" onclick="closeMobileNav()">Menu</a>
+  <a href="#contact" onclick="closeMobileNav()">Contact</a>
+  <a href="tel:03167090918">Call: 0316-7090918</a>
+</div>
+<section id="hero">
+  <div class="hero-bg"></div><div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Now Delivering - Wapda City, Faisalabad</div>
+    <h1 class="hero-h1">Seriously<br><em>Good Food.</em><br>Fast.</h1>
+    <p class="hero-sub">Pizza, burgers, shawarma and more - crafted fresh and delivered hot to your door.</p>
+    <div class="hero-ctas">
+      <a href="#menu-section" class="btn-primary">Order Now</a>
+      <a href="tel:03167090918" class="btn-secondary">Call to Order</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-val">30min</div><div class="stat-lbl">Avg Delivery</div></div>
+      <div class="stat-item"><div class="stat-val">50+</div><div class="stat-lbl">Menu Items</div></div>
+      <div class="stat-item"><div class="stat-val">4.9</div><div class="stat-lbl">Rating</div></div>
+    </div>
+  </div>
+</section>
+<nav id="category-nav"><div class="cat-tabs" id="cat-tabs"></div></nav>
+<main id="menu-section">
+  <div style="padding:2.5rem 5% .5rem">
+    <h2 class="section-heading reveal">Our <em>Menu</em></h2>
+    <p class="section-sub reveal">Fresh ingredients, bold flavours - tap any item to see more.</p>
+  </div>
+  <div id="menu-container"></div>
+</main>
+<footer id="contact">
+  <div class="footer-grid">
+    <div class="footer-brand"><h3>Fast<span>One</span></h3><p>Premium fast food crafted fresh every day. Managed by NoMansAi.</p></div>
+    <div class="footer-col"><h4>Contact</h4><a href="tel:03167090918">0316-7090918</a><a href="tel:03064288192">0306-4288192</a><a href="https://wa.me/923087918662" target="_blank">WhatsApp Us</a></div>
+    <div class="footer-col"><h4>Location</h4><a>Jazz Cash Commercial Market</a><a>G-Block, Wapda City</a><a>Faisalabad, Pakistan</a></div>
+  </div>
+  <div class="footer-bottom"><span>2025 Fast One. All rights reserved.</span><span>Powered by NoMansAi</span></div>
+</footer>
+<div id="cart-overlay"></div>
+<aside id="cart-drawer">
+  <div class="cart-hdr">
+    <div class="cart-hdr-left">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span class="cart-hdr-title">Your Order</span>
+      <span class="cart-item-count" id="cart-badge">0</span>
+    </div>
+    <button class="cart-close-btn" id="cart-close-btn">x</button>
+  </div>
+  <div id="cart-body" class="cart-items-list">
+    <div class="cart-empty-state" id="cart-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <p>Your cart is empty. Add some delicious items!</p>
+    </div>
+  </div>
+  <div class="cart-ftr">
+    <div id="cart-totals" style="display:none">
+      <div class="cart-row"><span>Subtotal</span><span class="cart-row-val" id="cart-subtotal">Rs 0</span></div>
+      <div class="cart-row"><span>Delivery</span><span class="cart-row-val" style="color:var(--green)">FREE</span></div>
+      <div class="cart-row grand"><span>Total</span><span class="cart-row-val" id="cart-total">Rs 0</span></div>
+    </div>
+    <button id="open-checkout-btn" disabled>Proceed to Checkout</button>
+  </div>
+</aside>
+<div id="item-modal">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-img-wrap"><img id="modal-img" src="" alt="" loading="lazy"><button class="modal-close" id="modal-close-btn">x</button></div>
+    <div class="modal-body">
+      <div class="modal-cat-label" id="modal-cat"></div>
+      <h2 class="modal-name" id="modal-name"></h2>
+      <p class="modal-desc" id="modal-desc"></p>
+      <div class="size-section" id="modal-sizes"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-price-display" id="modal-price"></div>
+      <div class="modal-qty">
+        <button class="qty-btn" id="modal-qty-dec">-</button>
+        <span class="qty-num" id="modal-qty-num">1</span>
+        <button class="qty-btn" id="modal-qty-inc">+</button>
+      </div>
+      <button class="modal-add-btn" id="modal-add-btn">Add to Cart</button>
+    </div>
+  </div>
+</div>
+<div id="checkout-modal">
+  <div class="checkout-box">
+    <div class="checkout-hdr">
+      <span class="checkout-title">Checkout</span>
+      <button class="checkout-close-btn" id="checkout-close-btn">x</button>
+    </div>
+    <div class="checkout-body">
+      <div class="order-summary" id="checkout-summary"></div>
+      <div class="form-group"><label class="form-label" for="f-name">Full Name *</label><input class="form-input" id="f-name" type="text" placeholder="Your name" autocomplete="name"></div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label" for="f-phone">Phone *</label><input class="form-input" id="f-phone" type="tel" placeholder="03XX-XXXXXXX" autocomplete="tel"></div>
+        <div class="form-group"><label class="form-label" for="f-area">Area</label><input class="form-input" id="f-area" type="text" placeholder="e.g. G-Block"></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="f-address">Delivery Address *</label><textarea class="form-textarea" id="f-address" placeholder="House #, Street #, near landmark..."></textarea></div>
+      <div class="form-group"><label class="form-label" for="f-notes">Special Instructions</label><textarea class="form-textarea" id="f-notes" placeholder="Extra spicy? No onions?" style="min-height:60px"></textarea></div>
+      <div class="form-group">
+        <label class="form-label">Payment Method *</label>
+        <div class="payment-opts">
+          <label class="pay-opt selected" id="opt-cod"><input type="radio" name="payment" value="Cash on Delivery" checked><span class="pay-icon">&#128181;</span><span class="pay-label">Cash on Delivery</span></label>
+          <label class="pay-opt" id="opt-jazz"><input type="radio" name="payment" value="JazzCash"><span class="pay-icon">&#128241;</span><span class="pay-label">JazzCash</span></label>
+        </div>
+      </div>
+      <div id="jazz-upload-section">
+        <div class="form-group">
+          <label class="form-label">Payment Screenshot *</label>
+          <div id="jazz-drop-zone"><div class="dz-icon">&#128248;</div><div class="dz-text">Tap to upload JazzCash screenshot</div><div class="dz-sub">JPG or PNG - max 5MB</div><img id="jazz-preview" alt="Payment receipt"></div>
+          <input type="file" id="jazz-file-input" accept="image/*">
+        </div>
+      </div>
+      <button id="place-order-btn" disabled>Place Order</button>
+    </div>
+  </div>
+</div>
+<div id="success-modal">
+  <div class="success-box">
+    <div class="success-icon">&#127881;</div>
+    <div class="success-title">Order Placed!</div>
+    <div class="success-id" id="success-order-id">FO-0000</div>
+    <p class="success-msg" id="success-msg">Your order has been received! We will call you to confirm shortly.</p>
+    <div class="success-actions">
+      <a id="wa-confirm-link" class="wa-btn" href="#" target="_blank">WhatsApp Confirm</a>
+      <button class="done-btn" id="success-done-btn">Continue Shopping</button>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script>
+  const BASE_URL    = "https://fastonefoodpoint.duckdns.org";
+  const N8N_WEBHOOK = "https://alimazharbaig1325.app.n8n.cloud/webhook-test/ba68bb67-65e9-4b6d-b9ac-6e5473c597eb";
+  const WA_NUMBER   = "923087918662";
+
+const MENU = [
+    { category:"Pizza", slug:"pizza", icon:"PIZZA",
+      items:[
+        {id:"p1",name:"Chicken Fajita",desc:"Classic chicken fajita with mozzarella, tomato sauce, onions and capsicum.",image:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:500},{label:"Medium",price:950},{label:"Large",price:1300}]},
+        {id:"p2",name:"Chicken Tikka",desc:"Spiced tikka chicken, roasted peppers, red onion and fresh coriander.",image:"https://images.unsplash.com/photo-1588315029754-2dd089d39a1a?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:500},{label:"Medium",price:950},{label:"Large",price:1300}]},
+        {id:"p3",name:"Vege Lover",desc:"Fresh garden vegetables — bell peppers, olives, mushrooms and onions.",image:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:500},{label:"Medium",price:950},{label:"Large",price:1300}]},
+        {id:"p4",name:"Chicken Supreme",desc:"Loaded with chicken, sausages, olives, mushrooms, and veggies.",image:"https://images.unsplash.com/photo-1604381536197-ce7618843516?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:500},{label:"Medium",price:950},{label:"Large",price:1300}]},
+        {id:"p5",name:"Hot & Spicy",desc:"Fiery jalapenos, spiced chicken, capsicum and chilli flakes.",image:"https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:500},{label:"Medium",price:950},{label:"Large",price:1300}]},
+        {id:"p6",name:"Super Special Supreme Pizza",desc:"Our fully loaded supreme pizza with extra toppings and cheese.",badge:"Loaded",image:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:500},{label:"Medium",price:950},{label:"Large",price:1300}]},
+        {id:"p7",name:"Special Malai Boti Pizza",desc:"Creamy malai boti chicken on a white sauce base, blanketed in mozzarella.",badge:"Chef's Pick",image:"https://images.unsplash.com/photo-1548369937-47519962c11a?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:600},{label:"Medium",price:1050},{label:"Large",price:1450}]},
+        {id:"p8",name:"Fast One Special",desc:"Our signature pizza: tikka, fajita, sausage, mushrooms and double cheese.",badge:"Signature",image:"https://images.unsplash.com/photo-1513104890d38-7c7f4ea02178?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:600},{label:"Medium",price:1050},{label:"Large",price:1450}]},
+        {id:"p9",name:"Chicken BBQ",desc:"Smoky BBQ chicken with caramelised onions, black olives and white sauce.",image:"https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:500},{label:"Medium",price:950},{label:"Large",price:1300}]},
+        {id:"p10",name:"Jalapeno Pizza",desc:"Extra spicy with a hearty helping of jalapenos and tender chicken.",image:"https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:500},{label:"Medium",price:950},{label:"Large",price:1400}]},
+        {id:"p11",name:"Special Nuggets Pizza",desc:"A unique fusion featuring crispy chicken nuggets baked right in.",image:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:600},{label:"Medium",price:1100},{label:"Large",price:1550}]},
+        {id:"p12",name:"Behari Kabab Pizza",desc:"Rich behari kabab, green peppers, onion and mozzarella — a desi twist.",image:"https://images.unsplash.com/photo-1528736235302-52922df5c122?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:550},{label:"Medium",price:1050},{label:"Large",price:1500}]}
+      ]
+    },
+    { category:"Stuffer Pizzas", slug:"stuffers", icon:"STUFFER",
+      items:[
+        {id:"st1",name:"Cheese Chicken Stuffer",desc:"A double-crust pizza packed full of cheese and chicken inside.",image:"https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Medium",price:1350},{label:"Large",price:1900}]},
+        {id:"st2",name:"Kabab Stuffer",desc:"Stuffed with succulent kababs and melting cheese.",image:"https://images.unsplash.com/photo-1604381536197-ce7618843516?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Medium",price:1350},{label:"Large",price:1800}]},
+        {id:"st3",name:"Malai Kabab Stuffer",desc:"Rich, creamy malai kababs stuffed into a thick, cheesy crust.",image:"https://images.unsplash.com/photo-1548369937-47519962c11a?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Medium",price:1450},{label:"Large",price:1900}]}
+      ]
+    },
+    { category:"Burgers & Sandwiches", slug:"burgers", icon:"BURGER",
+      items:[
+        {id:"b1",name:"Zinger Burger",desc:"Crispy fried chicken fillet, fresh lettuce, and mayo.",image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Regular",price:450},{label:"With Cheese",price:500}]},
+        {id:"b2",name:"Crunchy Burger",desc:"Extra-crispy panko-coated chicken thigh, pickles and sauce.",image:"https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Regular",price:450},{label:"With Cheese",price:500}]},
+        {id:"b3",name:"Jalapeno Burger",desc:"Spicy jalapeno chicken, pepper jack sauce and crunchy slaw.",image:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Regular",price:480},{label:"With Cheese",price:520}]},
+        {id:"b4",name:"Tower Burger",desc:"A stacked double-patty beast with caramelised onions.",badge:"Massive",image:"https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600&h=380&fit=crop&auto=format",price:600},
+        {id:"b5",name:"Deker Burger",desc:"Double layer chicken burger packed with flavor.",image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Regular",price:470},{label:"With Cheese",price:520}]},
+        {id:"b6",name:"Crispy Patty Burger",desc:"A budget-friendly crispy chicken patty burger.",image:"https://images.unsplash.com/photo-1550317138-10000687a72b?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Regular",price:300},{label:"With Cheese",price:350}]},
+        {id:"b7",name:"Chappli Burger",desc:"Spiced minced beef chappli patty with fresh onions and chutney.",image:"https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Regular",price:300},{label:"With Cheese",price:350}]},
+        {id:"sw1",name:"Mexican Sandwich",desc:"Spicy and loaded Mexican style sandwich.",badge:"New",image:"https://images.unsplash.com/photo-1619096252214-ef06c45683e3?w=600&h=380&fit=crop&auto=format",price:750},
+        {id:"sw2",name:"Supreme Sandwich",desc:"Fully loaded supreme sandwich.",image:"https://images.unsplash.com/photo-1619096252214-ef06c45683e3?w=600&h=380&fit=crop&auto=format",price:750},
+        {id:"sw3",name:"Zinger Sandwich",desc:"Crispy zinger fillet packed in a toasted sandwich.",image:"https://images.unsplash.com/photo-1619096252214-ef06c45683e3?w=600&h=380&fit=crop&auto=format",price:850}
+      ]
+    },
+    { category:"Deals", slug:"deals", icon:"DEAL",
+      items:[
+        {id:"dl1",name:"Deal 1",desc:"5 Wings, 5 Nuggets, 350ml Coke",image:"https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=600&h=380&fit=crop&auto=format",price:600},
+        {id:"dl2",name:"Deal 2",desc:"2 Zinger Burgers with Fries, 350ml Coke",badge:"Popular",image:"https://images.unsplash.com/photo-1594212683935-43fb1b058bf8?w=600&h=380&fit=crop&auto=format",price:1000},
+        {id:"dl3",name:"Deal 3",desc:"1 Petti Burger, 5 Wings, 350ml Coke",image:"https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=600&h=380&fit=crop&auto=format",price:600},
+        {id:"dl4",name:"Deal 4",desc:"1 Crunchy Burger, 5 Nuggets, 350ml Coke",image:"https://images.unsplash.com/photo-1594212683935-43fb1b058bf8?w=600&h=380&fit=crop&auto=format",price:650},
+        {id:"dl5",name:"Deal 5",desc:"3 Pcs Nuggets, 3 Pcs Wings, 350ml Coke",image:"https://images.unsplash.com/photo-1562967914-608f82629710?w=600&h=380&fit=crop&auto=format",price:450},
+        {id:"dl6",name:"Deal 6",desc:"1 Zinger Burger with Fries, 350ml Coke",image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=380&fit=crop&auto=format",price:600}
+      ]
+    },
+    { category:"Combos & Large Deals", slug:"combos", icon:"COMBO",
+      items:[
+        {id:"cm1",name:"Crunchy Deal",desc:"4 Crunchy Burgers + 1L Drink",image:"https://images.unsplash.com/photo-1594212683935-43fb1b058bf8?w=600&h=380&fit=crop&auto=format",price:1800},
+        {id:"cm2",name:"Golden Deal",desc:"4 Zinger Burgers + 1L Drink",badge:"Family Pick",image:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=600&h=380&fit=crop&auto=format",price:1800},
+        {id:"cm3",name:"Chicken Pratha Deal",desc:"4 Chicken Prathas + 1L Drink",image:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&h=380&fit=crop&auto=format",price:1200},
+        {id:"cm4",name:"Zinger Shawarma Deal",desc:"4 Zinger Shawarmas + 1L Drink",image:"https://images.unsplash.com/photo-1626700051175-3fdf77f74e7a?w=600&h=380&fit=crop&auto=format",price:1200},
+        {id:"cm5",name:"Jambo Deal",desc:"3 Wings Deal + 1L Drink",image:"https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=600&h=380&fit=crop&auto=format",price:2100},
+        {id:"cm6",name:"Nuggets Deal",desc:"3 Nuggets Deal + 1.5L Drink",image:"https://images.unsplash.com/photo-1562967914-608f82629710?w=600&h=380&fit=crop&auto=format",price:1500},
+        {id:"cm7",name:"Regale Deal",desc:"4 Regale Burgers + 1L Drink",image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=380&fit=crop&auto=format",price:1200},
+        {id:"cm8",name:"Zinger Pratha Deal",desc:"4 Zinger Prathas + 1L Drink",image:"https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=600&h=380&fit=crop&auto=format",price:1320},
+        {id:"cm9",name:"Chappli Deal",desc:"4 Chappli Burgers + 1L Drink",image:"https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&h=380&fit=crop&auto=format",price:1200},
+        {id:"pz1",name:"Deal 1 (Pizza)",desc:"2 Large Pizzas + 1.5L Drink",badge:"Party Size",image:"https://images.unsplash.com/photo-1513104890d38-7c7f4ea02178?w=600&h=380&fit=crop&auto=format",price:2600},
+        {id:"pz2",name:"Deal 2 (Pizza)",desc:"1 Large Pizza + 1 Medium Pizza + 1.5L Drink",image:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=380&fit=crop&auto=format",price:2250},
+        {id:"pz3",name:"Deal 3 (Pizza)",desc:"2 Medium Pizzas + 1L Drink",image:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&h=380&fit=crop&auto=format",price:1900},
+        {id:"pz4",name:"Deal 4 (Pizza)",desc:"1 Large Pizza + 1 Small Pizza + 1L Drink",image:"https://images.unsplash.com/photo-1604381536197-ce7618843516?w=600&h=380&fit=crop&auto=format",price:1800},
+        {id:"pz5",name:"Deal 5 (Pizza)",desc:"1 Medium Pizza + 1 Small Pizza + 1L Drink",image:"https://images.unsplash.com/photo-1588315029754-2dd089d39a1a?w=600&h=380&fit=crop&auto=format",price:1450},
+        {id:"pz6",name:"Deal 6 (Pizza)",desc:"2 Small Pizzas + 500ml Drink",image:"https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=600&h=380&fit=crop&auto=format",price:1050}
+      ]
+    },
+    { category:"Sides, Pasta & Fries", slug:"sides", icon:"FRIES",
+      items:[
+        {id:"sd1",name:"Chicken Pasta",desc:"Creamy pasta tossed with grilled chicken and bell peppers.",image:"https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Half",price:500},{label:"Full",price:700}]},
+        {id:"sd2",name:"Chicken Nuggets",desc:"Juicy chicken nuggets with a golden crispy coating.",image:"https://images.unsplash.com/photo-1562967914-608f82629710?w=600&h=380&fit=crop&auto=format",price:500},
+        {id:"sd3",name:"Crispy Wings",desc:"Crispy fried wings in our signature coating.",image:"https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=600&h=380&fit=crop&auto=format",price:700},
+        {id:"sd4",name:"Thai Sauce Wings",desc:"Crispy wings glazed in a sticky-sweet Thai chilli sauce.",image:"https://images.unsplash.com/photo-1598103442097-8b74394b95c8?w=600&h=380&fit=crop&auto=format",price:750},
+        {id:"sd5",name:"Oven Bake Wings",desc:"Delicious, tender oven-baked wings.",image:"https://images.unsplash.com/photo-1608039755401-74207cc5e28a?w=600&h=380&fit=crop&auto=format",price:800},
+        {id:"sd6",name:"Hot Shot",desc:"Intensely seasoned spicy chicken bites.",image:"https://images.unsplash.com/photo-1562967914-608f82629710?w=600&h=380&fit=crop&auto=format",price:700},
+        {id:"sd7",name:"Loaded Fries",desc:"Fries piled high with cheese sauce, jalapenos and chicken.",image:"https://images.unsplash.com/photo-1573080496219-bb964701c394?w=600&h=380&fit=crop&auto=format",price:700},
+        {id:"sd8",name:"Zinger Fries",desc:"Classic fries elevated with zinger chicken and sauce.",badge:"Must Try",image:"https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&h=380&fit=crop&auto=format",price:800},
+        {id:"sd9",name:"Pizza Fries",desc:"Fries smothered in pizza sauce, mozzarella and toppings.",image:"https://images.unsplash.com/photo-1573080496219-bb964701c394?w=600&h=380&fit=crop&auto=format",price:600},
+        {id:"sd10",name:"Mayo Fries",desc:"Golden fries topped with rich, creamy mayo.",image:"https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&h=380&fit=crop&auto=format",price:450},
+        {id:"sd11",name:"Regular Fries",desc:"Perfectly salted golden fries.",image:"https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:250},{label:"Large",price:400}]},
+        {id:"sd12",name:"Masala Fries",desc:"Golden fries dusted with our house masala spice blend.",image:"https://images.unsplash.com/photo-1573080496219-bb964701c394?w=600&h=380&fit=crop&auto=format",sizes:[{label:"Small",price:400},{label:"Large",price:500}]}
+      ]
+    },
+    { category:"Shawarma, Paratha & Rolls", slug:"wraps", icon:"WRAP",
+      items:[
+        {id:"w1",name:"Chicken Shawarma",desc:"Tender rotisserie chicken and vegetables wrapped in warm bread.",image:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=380&fit=crop&auto=format",price:250},
+        {id:"w2",name:"Chicken Achari Shawarma",desc:"Shawarma with a tangy, spicy achari kick.",image:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=380&fit=crop&auto=format",price:270},
+        {id:"w3",name:"Chicken Cheese Shawarma",desc:"Cheesy, gooey chicken shawarma.",badge:"New",image:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=380&fit=crop&auto=format",price:300},
+        {id:"w4",name:"Zinger Shawarma",desc:"Crispy zinger chicken rolled into a shawarma.",badge:"Best Seller",image:"https://images.unsplash.com/photo-1626700051175-3fdf77f74e7a?w=600&h=380&fit=crop&auto=format",price:300},
+        {id:"w5",name:"Zinger Shawarma Special",desc:"Extra loaded crispy zinger shawarma.",image:"https://images.unsplash.com/photo-1626700051175-3fdf77f74e7a?w=600&h=380&fit=crop&auto=format",price:350},
+        {id:"w6",name:"Chicken Kabab Shawarma",desc:"Grilled kabab chunks wrapped with fresh veggies and sauce.",image:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=380&fit=crop&auto=format",price:280},
+        {id:"w7",name:"Special Chicken Shawarma",desc:"Extra loaded with special house sauce and double chicken.",image:"https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=600&h=380&fit=crop&auto=format",price:300},
+        {id:"w8",name:"Shawarma Platter (3 Bread)",desc:"Three full shawarmas served with extra sauce and sides.",image:"https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=600&h=380&fit=crop&auto=format",price:700},
+        {id:"w8b",name:"Shawarma Platter (4 Bread)",desc:"Four full shawarmas served with extra sauce and sides.",image:"https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=600&h=380&fit=crop&auto=format",price:800},
+        {id:"w9",name:"Malai Boti Shawarma",desc:"Creamy malai boti chicken wrapped in fresh bread.",image:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=380&fit=crop&auto=format",price:380},
+        {id:"w10",name:"Chicken Paratha",desc:"Classic spiced chicken rolled in a crispy, flaky paratha.",image:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&h=380&fit=crop&auto=format",price:300},
+        {id:"w11",name:"Chicken Achari Paratha",desc:"Tangy achari chicken wrapped in a crispy paratha.",image:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&h=380&fit=crop&auto=format",price:330},
+        {id:"w12",name:"Chicken Malai Boti Paratha",desc:"Creamy malai chicken inside a warm, flaky paratha.",image:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&h=380&fit=crop&auto=format",price:400},
+        {id:"w13",name:"Zinger Paratha",desc:"Crispy zinger fillet packed in a traditional paratha.",image:"https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=600&h=380&fit=crop&auto=format",price:330},
+        {id:"w14",name:"Chicken Kabab Paratha",desc:"Grilled kabab chunks in a crispy paratha.",image:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&h=380&fit=crop&auto=format",price:300},
+        {id:"w15",name:"Special Chicken Paratha",desc:"Loaded special chicken paratha roll.",image:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&h=380&fit=crop&auto=format",price:350},
+        {id:"w16",name:"Special Zinger Paratha",desc:"Loaded special zinger paratha roll.",image:"https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=600&h=380&fit=crop&auto=format",price:380},
+        {id:"w17",name:"Snacky Rap",desc:"Delicious and crispy snacky wrap.",image:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=380&fit=crop&auto=format",price:500},
+        {id:"w18",name:"Spin Roll",desc:"Spicy and crispy chicken spin roll.",image:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=380&fit=crop&auto=format",price:450}
+      ]
+    }
+  ];
+
+  let cart=[], modalItem=null, modalQty=1, modalSelSize=null, jazzB64=null, jazzMime=null;
+  const qs=s=>document.querySelector(s), qsa=s=>document.querySelectorAll(s), $=id=>document.getElementById(id);
+
+  function fmtPrice(n){return"Rs "+Number(n).toLocaleString()}
+  function cartTotal(){return cart.reduce((s,i)=>s+i.price*i.qty,0)}
+  function cartCount(){return cart.reduce((s,i)=>s+i.qty,0)}
+
+  function showToast(msg,type="success",dur=2600){
+    const icons={success:"",error:"",info:"i"};
+    const el=document.createElement("div");
+    el.className="toast "+type;
+    el.innerHTML=`<span class="toast-icon">${type==="success"?"✅":type==="error"?"❌":"ℹ️"}</span>${msg}`;
+    $("toast-container").appendChild(el);
+    setTimeout(()=>{el.classList.add("removing");el.addEventListener("animationend",()=>el.remove())},dur);
+  }
+
+  function genOrderId(){const n=(parseInt(localStorage.getItem("fo_order_counter")||"0")+1);localStorage.setItem("fo_order_counter",n);return"FO-"+String(n).padStart(4,"0")}
+
+  function buildMenu(){
+    const container=$("menu-container"), tabsEl=$("cat-tabs");
+    MENU.forEach((cat,ci)=>{
+      const tab=document.createElement("button");
+      tab.className="cat-tab"+(ci===0?" active":"");
+      tab.textContent=cat.category;
+      tab.dataset.slug=cat.slug;
+      tab.addEventListener("click",()=>{
+        qsa(".cat-tab").forEach(t=>t.classList.remove("active"));
+        tab.classList.add("active");
+        $("cat-"+cat.slug).scrollIntoView({behavior:"smooth",block:"start"});
+      });
+      tabsEl.appendChild(tab);
+      const section=document.createElement("div");
+      section.className="menu-category reveal"; section.id="cat-"+cat.slug;
+      const heading=document.createElement("div");
+      heading.className="cat-title";
+      heading.innerHTML=cat.category+` <span class="cat-badge">${cat.items.length} items</span>`;
+      section.appendChild(heading);
+      const grid=document.createElement("div"); grid.className="menu-grid";
+      cat.items.forEach(item=>{
+        const lowestPrice=item.price||(item.sizes?Math.min(...item.sizes.map(s=>s.price)):0);
+        const hasMultiSize=item.sizes&&item.sizes.length>1;
+        const card=document.createElement("article");
+        card.className="menu-card";
+        card.innerHTML=`
+          <div class="card-img-wrap">
+            <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=380&fit=crop'">
+            ${item.badge?`<div class="card-badge">${item.badge}</div>`:""}
+          </div>
+          <div class="card-body">
+            <div class="card-name">${item.name}</div>
+            <div class="card-desc">${item.desc}</div>
+            <div class="card-footer">
+              <div class="card-price">${hasMultiSize?'<span class="price-from">from </span>':""}${fmtPrice(lowestPrice)}</div>
+              <button class="card-add-btn" aria-label="Add ${item.name}">+</button>
+            </div>
+          </div>`;
+        card.querySelector(".card-img-wrap").addEventListener("click",()=>openModal(item,cat.category));
+        card.querySelector(".card-name").addEventListener("click",()=>openModal(item,cat.category));
+        card.querySelector(".card-desc").addEventListener("click",()=>openModal(item,cat.category));
+        card.querySelector(".card-add-btn").addEventListener("click",e=>{
+          e.stopPropagation();
+          if(hasMultiSize) openModal(item,cat.category);
+          else addToCart({id:item.id,name:item.name,variant:"",price:lowestPrice,qty:1,image:item.image});
+        });
+        grid.appendChild(card);
+      });
+      section.appendChild(grid);
+      container.appendChild(section);
+    });
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          e.target.classList.add("visible");
+          const catEl=e.target.closest(".menu-category");
+          if(catEl&&catEl.id.startsWith("cat-")){
+            const slug=catEl.id.replace("cat-","");
+            qsa(".cat-tab").forEach(t=>t.classList.toggle("active",t.dataset.slug===slug));
+          }
+        }
+      });
+    },{threshold:.1});
+    qsa(".reveal").forEach(el=>io.observe(el));
+  }
+
+  function openModal(item,catLabel){
+    modalItem=item; modalQty=1; modalSelSize=item.sizes?0:null;
+    $("modal-cat").textContent=catLabel;
+    $("modal-name").textContent=item.name;
+    $("modal-desc").textContent=item.desc;
+    $("modal-img").src=item.image;
+    $("modal-img").alt=item.name;
+    renderModalSizes(); updateModalPrice();
+    $("modal-qty-num").textContent="1";
+    $("item-modal").classList.add("open");
+    document.body.style.overflow="hidden";
+  }
+
+  function renderModalSizes(){
+    const c=$("modal-sizes"); c.innerHTML="";
+    if(!modalItem.sizes||modalItem.sizes.length<2) return;
+    const lbl=document.createElement("span"); lbl.className="size-label"; lbl.textContent="Choose Size";
+    c.appendChild(lbl);
+    const opts=document.createElement("div"); opts.className="size-options";
+    modalItem.sizes.forEach((sz,i)=>{
+      const el=document.createElement("div");
+      el.className="size-opt"+(i===0?" selected":"");
+      el.innerHTML=`<div class="size-opt-name">${sz.label}</div><div class="size-opt-price">${fmtPrice(sz.price)}</div>`;
+      el.addEventListener("click",()=>{
+        qsa(".size-opt").forEach(o=>o.classList.remove("selected"));
+        el.classList.add("selected"); modalSelSize=i; updateModalPrice();
+      });
+      opts.appendChild(el);
+    });
+    c.appendChild(opts);
+  }
+
+  function updateModalPrice(){
+    const price=modalItem.sizes?modalItem.sizes[modalSelSize??0].price:modalItem.price;
+    $("modal-price").textContent=fmtPrice(price*modalQty);
+    $("modal-add-btn").dataset.price=price;
+    $("modal-add-btn").dataset.variant=modalItem.sizes?modalItem.sizes[modalSelSize??0].label:"";
+  }
+
+  function closeModal(){$("item-modal").classList.remove("open");document.body.style.overflow=""}
+
+  $("modal-close-btn").addEventListener("click",closeModal);
+  $("item-modal").addEventListener("click",e=>{if(e.target===$("item-modal"))closeModal()});
+  $("modal-qty-inc").addEventListener("click",()=>{modalQty=Math.min(modalQty+1,20);$("modal-qty-num").textContent=modalQty;updateModalPrice()});
+  $("modal-qty-dec").addEventListener("click",()=>{modalQty=Math.max(modalQty-1,1);$("modal-qty-num").textContent=modalQty;updateModalPrice()});
+  $("modal-add-btn").addEventListener("click",()=>{
+    const price=parseInt($("modal-add-btn").dataset.price);
+    const variant=$("modal-add-btn").dataset.variant;
+    for(let i=0;i<modalQty;i++) addToCart({id:modalItem.id,name:modalItem.name,variant,price,qty:1,image:modalItem.image});
+    closeModal();
+  });
+
+  function cartKey(item){return item.id+"|"+item.variant}
+  function addToCart(item){
+    const key=cartKey(item), ex=cart.find(c=>cartKey(c)===key);
+    if(ex) ex.qty+=item.qty; else cart.push({...item});
+    renderCart(); openCart();
+    showToast(`${item.name}${item.variant?" ("+item.variant+")":""} added!`);
+  }
+  function removeFromCart(key){cart=cart.filter(c=>cartKey(c)!==key);renderCart()}
+  function adjustQty(key,delta){
+    const item=cart.find(c=>cartKey(c)===key); if(!item) return;
+    item.qty+=delta; if(item.qty<=0) removeFromCart(key); else renderCart();
+  }
+
+  function renderCart(){
+    const count=cartCount(), total=cartTotal(), isEmpty=cart.length===0;
+    const badge=$("nav-cart-count");
+    badge.textContent=count; badge.classList.toggle("visible",count>0);
+    $("cart-badge").textContent=count;
+    $("cart-empty").style.display=isEmpty?"flex":"none";
+    $("cart-totals").style.display=isEmpty?"none":"block";
+    $("open-checkout-btn").disabled=isEmpty;
+    $("cart-body").querySelectorAll(".cart-item").forEach(e=>e.remove());
+    cart.forEach(item=>{
+      const key=cartKey(item), el=document.createElement("div");
+      el.className="cart-item";
+      el.innerHTML=`
+        <img class="cart-item-img" src="${item.image}" alt="${item.name}" onerror="this.style.display='none'">
+        <div class="cart-item-details">
+          <div class="cart-item-name">${item.name}</div>
+          ${item.variant?`<div class="cart-item-variant">${item.variant}</div>`:""}
+          <div class="cart-item-bottom">
+            <div class="cart-item-price">${fmtPrice(item.price*item.qty)}</div>
+            <div class="cart-qty-controls">
+              <button class="cq-btn" data-key="${key}" data-delta="-1">-</button>
+              <span class="cq-num">${item.qty}</span>
+              <button class="cq-btn" data-key="${key}" data-delta="1">+</button>
+            </div>
+            <button class="cart-item-del" data-key="${key}">x</button>
+          </div>
+        </div>`;
+      $("cart-body").insertBefore(el,$("cart-empty"));
+    });
+    $("cart-subtotal").textContent=fmtPrice(total);
+    $("cart-total").textContent=fmtPrice(total);
+  }
+
+  $("cart-body").addEventListener("click",e=>{
+    const btn=e.target.closest("[data-key]"); if(!btn) return;
+    const key=btn.dataset.key;
+    if(btn.dataset.delta) adjustQty(key,parseInt(btn.dataset.delta));
+    else if(btn.classList.contains("cart-item-del")) removeFromCart(key);
+  });
+
+  function openCart(){$("cart-drawer").classList.add("open");$("cart-overlay").classList.add("open");document.body.style.overflow="hidden"}
+  function closeCart(){$("cart-drawer").classList.remove("open");$("cart-overlay").classList.remove("open");document.body.style.overflow=""}
+
+  $("nav-cart-btn").addEventListener("click",openCart);
+  $("cart-close-btn").addEventListener("click",closeCart);
+  $("cart-overlay").addEventListener("click",closeCart);
+
+  function openCheckout(){closeCart();renderCheckoutSummary();$("checkout-modal").classList.add("open");document.body.style.overflow="hidden"}
+  function closeCheckout(){$("checkout-modal").classList.remove("open");document.body.style.overflow=""}
+  function renderCheckoutSummary(){
+    const total=cartTotal();
+    $("checkout-summary").innerHTML=`<div class="order-summary-title">Order Summary</div>`+
+      cart.map(i=>`<div class="summary-item"><span>${i.qty}x ${i.name}${i.variant?" ("+i.variant+")":""}</span><span>${fmtPrice(i.price*i.qty)}</span></div>`).join("")+
+      `<div class="summary-total"><span>Total</span><span>${fmtPrice(total)}</span></div>`;
+    validateCheckout();
+  }
+
+  $("open-checkout-btn").addEventListener("click",openCheckout);
+  $("checkout-close-btn").addEventListener("click",closeCheckout);
+  $("checkout-modal").addEventListener("click",e=>{if(e.target===$("checkout-modal"))closeCheckout()});
+
+  ["opt-cod","opt-jazz"].forEach(id=>{
+    $(id).addEventListener("click",()=>{
+      qsa(".pay-opt").forEach(o=>o.classList.remove("selected"));
+      $(id).classList.add("selected"); $(id).querySelector("input").checked=true;
+      const isJazz=id==="opt-jazz";
+      $("jazz-upload-section").style.display=isJazz?"block":"none";
+      if(!isJazz){jazzB64=null;jazzMime=null}
+      validateCheckout();
+    });
+  });
+
+  ["f-name","f-phone","f-address"].forEach(id=>$(id).addEventListener("input",validateCheckout));
+  function validateCheckout(){
+    const name=$("f-name").value.trim(), phone=$("f-phone").value.trim(), address=$("f-address").value.trim();
+    const isJazz=$("opt-jazz").classList.contains("selected"), jazzOk=!isJazz||!!jazzB64;
+    $("place-order-btn").disabled=!(name&&phone&&address&&jazzOk&&cart.length>0);
+  }
+
+  function setupJazzUpload(){
+    const zone=$("jazz-drop-zone"), input=$("jazz-file-input");
+    zone.addEventListener("click",()=>input.click());
+    zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("drag-over")});
+    zone.addEventListener("dragleave",()=>zone.classList.remove("drag-over"));
+    zone.addEventListener("drop",e=>{e.preventDefault();zone.classList.remove("drag-over");if(e.dataTransfer.files[0])handleJazzFile(e.dataTransfer.files[0])});
+    input.addEventListener("change",()=>{if(input.files[0])handleJazzFile(input.files[0])});
+  }
+function handleJazzFile(file){
+    if(!file.type.startsWith("image/")){showToast("Please upload an image file","error");return}
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        // Compress the image so it doesn't crash the browser's local memory
+        const canvas = document.createElement('canvas');
+        const max = 700; // max width/height
+        let w = img.width, h = img.height;
+        if(w > max || h > max){
+          if(w > h){ h = Math.round((h *= max / w)); w = max; }
+          else { w = Math.round((w *= max / h)); h = max; }
+        }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        
+        // Convert to a tiny JPEG
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
+        jazzB64 = dataUrl.split(",")[1];
+        jazzMime = 'image/jpeg';
+        
+        const preview = $("jazz-preview");
+        preview.src = dataUrl; preview.style.display = "block";
+        $("jazz-drop-zone").classList.add("uploaded");
+        $("jazz-drop-zone").querySelector(".dz-text").textContent = "Uploaded: "+file.name;
+        validateCheckout();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+$("place-order-btn").addEventListener("click", async () => {
+    const name=$("f-name").value.trim(), phone=$("f-phone").value.replace(/\D/g,"");
+    const address=$("f-address").value.trim(), area=$("f-area").value.trim();
+    const notes=$("f-notes").value.trim(), payment=document.querySelector(".pay-opt.selected input").value;
+    const total=cartTotal(), orderId=genOrderId();
+    const itemsStr=cart.map(i=>`${i.qty}x ${i.name}${i.variant?" ("+i.variant+")":""}`).join(", ");
+    const btn=$("place-order-btn");
+    
+    btn.disabled=true; 
+    btn.innerHTML='<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span> Placing order...';
+    
+    // 1. Save directly to localStorage so Admin Panel (Local Mode) sees it instantly
+    try {
+      const localPayload = {
+        id: orderId,
+        customer: { name, phone, address, area, notes },
+        itemsStr: itemsStr,
+        total: total,
+        payment: payment,
+        jazzProof: jazzB64 || null,
+        jazzProofType: jazzMime || null,
+        status: "new",
+        timestamp: new Date().toISOString()
+      };
+      const localOrders = JSON.parse(localStorage.getItem("fastone_orders") || "[]");
+      localOrders.unshift(localPayload);
+      localStorage.setItem("fastone_orders", JSON.stringify(localOrders));
+    } catch(e) { console.error("Could not save locally", e); }
+
+    // 2. Send to your custom backend (Bypassing n8n entirely)
+    const payload = {source:"website",orderId,customerName:name,customerNumber:phone,customerAddress:address+(area?" ("+area+")":""),customerOrder:itemsStr,orderDate:new Date().toLocaleDateString("en-GB"),orderTime:new Date().toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"}),paymentMethod:payment,total,subtotal:total,deliveryFee:0,notes,jazzCashProof:jazzB64||null,jazzCashProofType:jazzMime||null,confirmed:false,status:"new"};
+    
+    try { 
+      await fetch(BASE_URL + "/api/n8n/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer FastOne_Secure_2026!"
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch(e) { console.error("Database connection failed", e); }
+
+    // 3. Finalize UI
+    const waText=encodeURIComponent("FAST ONE - "+orderId+"\n\n"+name+"\n"+phone+"\n"+address+(area?" ("+area+")"  :"")+"\n\n"+cart.map(i=>"- "+i.qty+"x "+i.name+(i.variant?" ("+i.variant+")":"")+" - Rs "+(i.price*i.qty).toLocaleString()).join("\n")+"\n\nTotal: Rs "+total.toLocaleString()+"\nPayment: "+payment+(notes?"\nNotes: "+notes:""));
+    $("success-order-id").textContent=orderId;
+    $("wa-confirm-link").href="https://wa.me/"+WA_NUMBER+"?text="+waText;
+    
+    btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9l20-7z"/></svg> Place Order';
+    closeCheckout(); $("success-modal").classList.add("open"); document.body.style.overflow="hidden";
+    cart=[]; jazzB64=null; jazzMime=null; renderCart();
+    
+    setTimeout(()=>window.open("https://wa.me/"+WA_NUMBER+"?text="+waText,"_blank"),2000);
+  });
+
+  $("success-done-btn").addEventListener("click",()=>{$("success-modal").classList.remove("open");document.body.style.overflow=""});
+
+  const navMenuBtn=$("nav-menu-btn"), mobileNav=$("mobile-nav");
+  navMenuBtn.addEventListener("click",()=>{const open=mobileNav.classList.toggle("open");navMenuBtn.classList.toggle("open",open);navMenuBtn.setAttribute("aria-expanded",open)});
+  function closeMobileNav(){mobileNav.classList.remove("open");navMenuBtn.classList.remove("open");navMenuBtn.setAttribute("aria-expanded","false")}
+
+  window.addEventListener("scroll",()=>{$("nav").style.borderBottomColor=window.scrollY>20?"rgba(255,255,255,.12)":"var(--border)"},{ passive:true});
+
+  // ── LIVE MENU LOADER ─────────────────────────────────────────────────────
+  // Fetches GET /api/menu and merges DB prices/availability with the local
+  // MENU array (which holds images, slugs, descriptions, category layout).
+  // Silently falls back to the hardcoded array if the API is unreachable.
+  async function fetchAndBuildMenu() {
+    try {
+      const res = await fetch(BASE_URL + '/api/menu', {
+        headers: { 'Authorization': 'Bearer FastOne_Secure_2026!' }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const dbItems = data.items || data || [];
+
+        // Build lookup: normalised item name → DB record
+        const dbMap = {};
+        dbItems.forEach(dbItem => {
+          dbMap[String(dbItem.name).toLowerCase().trim()] = dbItem;
+        });
+
+        MENU.forEach(cat => {
+          cat.items = cat.items
+            .map(localItem => {
+              const key  = localItem.name.toLowerCase().trim();
+              const live = dbMap[key];
+              if (!live) return localItem;           // not in DB yet — keep local
+
+              const patched = { ...localItem };
+
+              // Patch price/sizes from DB
+              if (live.sizes && live.sizes.length > 0) {
+                patched.sizes = live.sizes;
+                delete patched.price;
+              } else if (live.price) {
+                patched.price = live.price;
+                delete patched.sizes;
+              }
+
+              // Flag out-of-stock items for filtering below
+              if (live.available === false) patched._unavailable = true;
+
+              return patched;
+            })
+            .filter(item => !item._unavailable);    // hide Out of Stock items
+        });
+      }
+    } catch (e) {
+      console.warn('[Menu] Live fetch failed — using local fallback.', e.message);
+    }
+
+    buildMenu();   // always called, with patched or original MENU
+  }
+
+  fetchAndBuildMenu(); renderCart(); setupJazzUpload();
+</script>
+</body>
+</html>

@@ -1,0 +1,856 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=You are a warm, friendly, and highly efficient fast-food cashier for 'Fast One'. You handle orders via WhatsApp.\n\n**METADATA INJECTION:**\n- Customer Number: {{ $node[\"WhatsApp Trigger\"].json[\"messages\"][0][\"from\"] }}\n- Customer Name: {{ $node[\"WhatsApp Trigger\"].json[\"contacts\"][0][\"profile\"][\"name\"] }}\n\n**CONVERSATION & CUSTOMER SERVICE RULES:**\n1. Be polite and conversational, but keep replies fast (under 25 words). Emulate a friendly human cashier.\n2. No repetitive greetings. If you have already said hi, get straight to helping them.\n3. If the user is undecided, enthusiastically recommend the \"Golden Deal\" or \"Malai Boti Pizza\".\n4. Order Status: If a customer asks about the status of an existing order or delivery time, reply exactly with: \"Your order is in the kitchen and will arrive within 30 minutes of your confirmation! 🛵\"\n5. Ask for missing details ONE AT A TIME in this strict order: \n   Step A) Confirm the exact food order.\n   Step B) Ask for the delivery address.\n   Step C) State the final calculated total order value (e.g., \"Your total is Rs. X\") AND ask for the payment method (JazzCash or COD).\n\n**STRICT DELIVERY LOCATION RULES (CRITICAL):**\n1. We ONLY deliver to \"Wapda City\". If a customer gives an address outside of Wapda City, politely apologize and explain that Fast One currently only delivers within Wapda City.\n2. An address is ONLY complete if it contains ALL THREE of these: \"Wapda City\", a \"House Number\", AND a \"Block\" (e.g., G-Block). \n3. If they say \"Wapda City\" but don't give a house or block, say: \"Great! Could you please share your exact House Number and Block?\" Do not confirm the order until you have both.\n\n**STRICT OUTPUT FORMAT (CRITICAL):**\nYou are communicating directly with a backend API. You must ALWAYS and ONLY respond with a single, valid JSON object. NEVER output plain text outside of this JSON block. Do NOT use markdown formatting (no ```json). \n\nYou must calculate the total cost of the items ordered and output it as a number in the `total_price` field.\n\nYou must format every single response using exactly this schema:\n{\n  \"customer_message\": \"Your conversational, friendly reply to the customer goes here.\",\n  \"customer_name\": \"Extract from metadata or chat, leave empty string if unknown\",\n  \"customer_number\": \"Extract from metadata or chat, leave empty string if unknown\",\n  \"customer_address\": \"Extract from chat. MUST include House and Block. Leave empty string if incomplete.\",\n  \"customer_order\": \"A clean, itemized list of the food ordered, leave empty string if unknown\",\n  \"total_price\": \"The numeric total cost of the order (e.g., 1600). Use 0 if no food ordered yet.\",\n  \"payment_method\": \"Must be exactly 'Cash on Delivery' or 'JazzCash', leave empty string if unknown\"\n}\n\n**FINALIZATION RULES:**\nWhen the order details (Name, Number, Address, Order) are complete, you MUST state the total order value to the customer before finalizing. \n\nCRITICAL PAYMENT LOGIC:\n- When asking for payment, set 'customer_message' to something like: \"Your total comes to Rs. [Insert Total]. Would you prefer to pay via Cash on Delivery or JazzCash?\"\n- If the customer says \"JazzCash\", Set 'customer_message' to exactly: \"Order confirmed! Your total is Rs. [Insert Total]. Please pay to JazzCash: 0300-7918682 and show the payment screenshot to our rider when they arrive in about 30 minutes! 🛵\"\n- If the customer says \"Cash on Delivery\" or \"COD\", Set 'customer_message' to exactly: \"Order confirmed! Your total is Rs. [Insert Total]. Please have the cash ready for our rider, arriving in about 30 minutes! 🍔\"\n\n**MENU & PRICES:**\n\n### **Pizza Menu (Small / Medium / Large)**\n* **Chicken Fajita:** Rs. 450 / 900 / 1250\n* **Chicken Tikka:** Rs. 450 / 900 / 1250\n* **Vege Lover:** Rs. 450 / 900 / 1250\n* **Chicken Supreme:** Rs. 450 / 900 / 1250\n* **Hot & Spicy:** Rs. 450 / 900 / 1250\n* **Super Special Supreme Pizza:** Rs. 450 / 900 / 1350\n* **Special Malai Boti Pizza:** Rs. 550 / 1000 / 1400\n* **Fast One Special:** Rs. 550 / 1000 / 1400\n* **Chicken BBQ:** Rs. 450 / 900 / 1250\n* **Jalapeno Pizza:** Rs. 450 / 900 / 1350\n* **Special Nuggets Pizza:** Rs. 550 / 1050 / 1500\n* **Behari Kabab Pizza:** Rs. 500 / 1000 / 1450\n\n### **Stuffer Pizzas (Medium / Large)**\n* **Cheese Chicken Stuffer:** Rs. 1300 / 1850\n* **Kabab Stuffer:** Rs. 1300 / 1750\n* **Malai Kabab Stuffer:** Rs. 1400 / 1950\n\n### **Burgers**\n* **Zinger Burger:** Rs. 400 (With Cheese: Rs. 450)\n* **Crunchy Burger:** Rs. 400 (With Cheese: Rs. 450)\n* **Jalapeno Burger:** Rs. 430 (With Cheese: Rs. 470)\n* **Tower Burger:** Rs. 550\n* **Deker Burger:** Rs. 430 (With Cheese: Rs. 470)\n* **Crispy Patty Burger:** Rs. 250 (With Cheese: Rs. 300)\n* **Chappli Burger:** Rs. 250 (With Cheese: Rs. 300)\n\n### **Deals (Numbered 1-6)**\n* **Deal 1:** 5 Wings, 5 Nuggets, 350ml Coke — Rs. 550\n* **Deal 2:** 2 Zinger Burgers, Fries, 2x 350ml Coke — Rs. 950\n* **Deal 3:** 1 Petty Burger, 5 Wings, 350ml Coke — Rs. 600\n* **Deal 4:** 1 Crunchy Burger, 5 Nuggets, 350ml Coke — Rs. 650\n* **Deal 5:** 3 Pcs Nuggets, 3 Pcs Wings, 350ml Coke — Rs. 400\n* **Deal 6:** 1 Zinger Burger, Fries, 350ml Coke — Rs. 550\n\n### **Special Combos & Large Deals**\n* **Crunchy Deal:** 4 Crunchy Burgers + 1L Drink — Rs. 1600\n* **Golden Deal:** 4 Zinger Burgers + 1L Drink — Rs. 1600\n* **Chicken Pratha Deal:** 4 Chicken Prathas + 1L Drink — Rs. 1120\n* **Zinger Shawarma Deal:** 4 Zinger Shawarmas + 1L Drink — Rs. 1120\n* **Jumbo Deal:** 3 Wings Deal + 1L Drink — Rs. 2100\n* **Nuggets Deal:** 3 Nuggets Deal + 1L Drink — Rs. 1200\n* **Regale Deal:** 4 Regale Burgers + 1L Drink — Rs. 1000\n* **Zinger Pratha Deal:** 4 Zinger Prathas + 1L Drink — Rs. 1240\n* **Chappli Deal:** 4 Chappli Burgers + 1L Drink — Rs. 1000\n* **Deal 1 (Pizza):** 2 Large Pizza + 1.5L Drink — Rs. 2500\n* **Deal 2 (Pizza):** 1 Large Pizza + 1 Medium Pizza + 1.5L Drink — Rs. 2150\n* **Deal 3 (Pizza):** 2 Medium Pizza + 1L Drink — Rs. 1850\n* **Deal 4 (Pizza):** 1 Large Pizza + 1L Drink — Rs. 1700\n* **Deal 5 (Pizza):** 1 Medium Pizza + 1 Small Pizza + 1L Drink — Rs. 1350\n* **Deal 6 (Pizza):** 2 Small Pizza + 500ml Drink — Rs. 950\n\n### **Pasta, Sides & Fries**\n* **Chicken Pasta:** Half Rs. 500 / Full Rs. 700\n* **Chicken Nuggets:** Rs. 400\n* **Crispy Wings:** Rs. 650\n* **Thai Sauce Wings:** Rs. 750\n* **Oven Bake Wings:** Rs. 750 (10 Pcs: Rs. 700)\n* **Hot Shot:** Rs. 700\n* **Zinger Fries:** Rs. 700\n* **Pizza Fries:** Rs. 600\n* **Mayo Fries:** Rs. 400\n* **Regular Fries:** Small Rs. 250 / Large Rs. 350\n* **Loaded Fries:** Rs. 600\n* **Masala Fries:** Rs. 300 (Large: Rs. 450)\n\n### **Shawarma & Paratha**\n* **Chicken Shawarma:** Rs. 230\n* **Chicken Achari Shawarma:** Rs. 240\n* **Zinger Shawarma:** Rs. 270\n* **Zinger Shawarma Special:** Rs. 280\n* **Chicken Kabab Shawarma:** Rs. 330\n* **Special Chicken Shawarma:** Rs. 250\n* **Shawarma Platter (3 Bread):** Rs. 650\n* **Malai Boti Shawarma:** Rs. 360\n* **Chicken Paratha:** Rs. 280\n* **Chicken Achari Paratha:** Rs. 290\n* **Chicken Malai Boti Paratha:** Rs. 390\n* **Zinger Paratha:** Rs. 310\n* **Special Chicken Paratha:** Rs. 330\n* **Special Zinger Paratha:** Rs. 360"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -544,
+        112
+      ],
+      "id": "ffe16de3-8b46-42b3-bfb8-ef60bf150441",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": 1000,
+          "temperature": 0.5,
+          "topP": 0.8
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        480
+      ],
+      "id": "cf51e433-6b39-453c-bf52-343d5dc696c3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Ox5KFlk2lP7HIfQT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        192
+      ],
+      "id": "5419d20e-76d7-4e14-96e3-26f4cfc8bbc7",
+      "name": "WhatsApp Trigger",
+      "webhookId": "509bb8a8-2a8c-4199-bcb2-938ceff53c28",
+      "executeOnce": true,
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "fd2xyNZ2YbF062GT",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1129462313575590",
+        "recipientPhoneNumber": "=+{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "messageType": "image",
+        "mediaLink": "https://i.postimg.cc/nzyLP8XF/Whats-App-Image-2026-04-09-at-11-35-43-PM.jpg",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        -96
+      ],
+      "id": "8dbdad8e-7a13-4ba1-9d52-33a967e34dee",
+      "name": "Send message",
+      "webhookId": "bd00a74c-c1a2-4af1-913c-d75203f858ba",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "9qiLEmX5QbYxKtne",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1129462313575590",
+        "recipientPhoneNumber": "=+{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "messageType": "image",
+        "mediaLink": "https://i.postimg.cc/bJDJgYwd/Whats-App-Image-2026-04-09-at-11-35-43-PM-(1).jpg",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        -96
+      ],
+      "id": "76d64ac7-dc40-482e-aaea-88795e18f6b8",
+      "name": "Send message1",
+      "webhookId": "dc68a309-6104-4456-8cd7-6c572f398116",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "9qiLEmX5QbYxKtne",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1129462313575590",
+        "recipientPhoneNumber": "=+{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.customer_message }}",
+        "additionalFields": {
+          "previewUrl": true
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        80
+      ],
+      "id": "ea28e887-6182-4a13-96b1-1aa6719da784",
+      "name": "Send message2",
+      "webhookId": "9da7f18e-9ac9-4a13-8f07-d0f89a041c79",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "9qiLEmX5QbYxKtne",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messages?.[0]?.text?.body || \"\" }}",
+                    "rightValue": "hi|hello|menu|hey|start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "f980f5bd-d3ed-4b81-bb22-d924c3f7b47c"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fdc4498b-48b5-4421-8d11-d79a5172beb0",
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1947678e-fd53-49e7-abab-3b372ac28ef0",
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none",
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -832,
+        128
+      ],
+      "id": "b45b1d1a-2ad8-4f5c-a908-c11722d3846d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $node[\"WhatsApp Trigger\"].json.messages[0].image.id }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        720
+      ],
+      "id": "8f857e9f-233f-4c60-9df0-9fb5bfff17af",
+      "name": "Download media",
+      "webhookId": "97862753-2ad4-4605-b554-5dd7e1f70cec",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "9qiLEmX5QbYxKtne",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1129462313575590",
+        "recipientPhoneNumber": "=+{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "Welcome to Fast One! 🍔  We’re ready to serve you the best Zingers and Pizzas in the city. Check out our menu below to see our latest deals!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -512,
+        -96
+      ],
+      "id": "94930268-a57e-4017-a734-9852d08731a1",
+      "name": "Send message3",
+      "webhookId": "640746dc-859f-479b-943e-996c3f214e35",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "9qiLEmX5QbYxKtne",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1129462313575590",
+        "recipientPhoneNumber": "=+{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        576
+      ],
+      "id": "9c676af0-99d0-44c2-b7a3-6e0048836c37",
+      "name": "Send message4",
+      "webhookId": "d00f8656-6798-4afe-89ad-4748e9d3d55d",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "9qiLEmX5QbYxKtne",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/api/upload-receipt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer FastOne_Secure_2026!"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "receipt",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "phone_number",
+              "value": "={{ $node[\"WhatsApp Trigger\"].json.messages[0].from }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        720
+      ],
+      "id": "aa572633-aeae-4105-b32b-2b71ea881c28",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/api/n8n/order",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer FastOne_Secure_2026!"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customerName\": \"{{ $json.customer_name }}\",\n  \"customerNumber\": \"{{ $json.customer_number }}\",\n  \"customerAddress\": \"{{ $json.customer_address }}\",\n  \"customerOrder\": \"{{ $json.customer_order }}\",\n  \"paymentMethod\": \"{{ $json.payment_method }}\",\n  \"total\": {{ $json.total }},\n  \"orderDate\": \"{{ $json.order_date }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        496,
+        304
+      ],
+      "id": "9bfe7683-808c-4ce7-bfae-4f36366765b5",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  \n  let rawText = item.json.output || item.json.text || item.json.customer_message || \"\";\n\n  try {\n    let cleanText = rawText.replace(/```json/gi, \"\").replace(/```/gi, \"\").trim();\n    let aiData = JSON.parse(cleanText);\n\n    // 1. Map the core AI fields\n    item.json.customer_message = aiData.customer_message;\n    \n    // 🏠 NEW: Clean the address to ONLY keep House and Block (Removes Wapda City)\n    let rawAddress = aiData.customer_address || \"\";\n    item.json.customer_address = rawAddress\n      .replace(/(wapda\\s*city|wapda|faisalabad)/gi, '') // Strip out city names\n      .split(',')                                       // Split by commas\n      .map(part => part.trim())                         // Remove extra spaces\n      .filter(part => part !== '')                      // Remove empty parts\n      .join(', ');                                      // Join back together cleanly\n\n    item.json.customer_order = aiData.customer_order || \"\";\n    item.json.payment_method = aiData.payment_method || \"\";\n\n    // 2. The Metadata Override (Prioritize WhatsApp profile name/number)\n    item.json.customer_name = (item.json.customer_name && item.json.customer_name.trim() !== \"\") ? item.json.customer_name : aiData.customer_name;\n    item.json.customer_number = (item.json.customer_number && item.json.customer_number.trim() !== \"\") ? item.json.customer_number : aiData.customer_number;\n\n    // 3. Ensure price is a number (Fallback to 0 if AI missed it)\n    item.json.total_price = aiData.total_price ? Number(aiData.total_price) : 0;\n    item.json.total = item.json.total_price; // Safe mapping for your HTTP Request node\n\n    // 4. Auto-generate today's exact date (YYYY-MM-DD)\n    const today = new Date();\n    item.json.order_date = today.toISOString().split('T')[0];\n\n  } catch (error) {\n    item.json.customer_message = \"Sorry, I'm still learning! Could you repeat that?\";\n    item.json.customer_address = \"\";\n    item.json.customer_order = \"\";\n    item.json.total_price = 0;\n    item.json.total = 0;\n    item.json.order_date = new Date().toISOString().split('T')[0];\n  }\n\n  // 5. The Gatekeeper: Check if the 4 core fields are filled\n  if (item.json.customer_name !== \"\" && \n      item.json.customer_address !== \"\" && \n      item.json.customer_order !== \"\" && \n      item.json.payment_method !== \"\") {\n    \n    item.json.should_proceed = true;\n    item.json.missing_fields = \"none\";\n  } else {\n    item.json.should_proceed = false;\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        208
+      ],
+      "id": "f0c1066f-3ac4-473b-b0fb-592eae26bdb5",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  let rawText = item.json.output || item.json.text || item.json.customer_message || \"\";\n  try {\n    let cleanText = rawText.replace(/```json/gi, \"\").replace(/```/gi, \"\").trim();\n    let aiData = JSON.parse(cleanText);\n\n    item.json.customer_message = aiData.customer_message;\n    \n    // 🏠 NEW: Clean the address to ONLY keep House and Block (Removes Wapda City)\n    let rawAddress = aiData.customer_address || \"\";\n    item.json.customer_address = rawAddress\n      .replace(/(wapda\\s*city|wapda|faisalabad)/gi, '') // Strip out city names\n      .split(',')                                       // Split by commas\n      .map(part => part.trim())                         // Remove extra spaces\n      .filter(part => part !== '')                      // Remove empty parts\n      .join(', ');                                      // Join back together cleanly\n\n    item.json.customer_order = aiData.customer_order || \"\";\n\n    // Standardize Payment Method\n    let payment = aiData.payment_method || \"\";\n    let paymentLower = payment.toLowerCase();\n\n    if (paymentLower.includes(\"jazz\")) {\n      item.json.payment_method = \"JazzCash\";\n    } else if (payment.toUpperCase() === \"COD\" || paymentLower.includes(\"cash\") || paymentLower.includes(\"delivery\")) {\n      item.json.payment_method = \"Cash on Delivery\";\n    } else {\n      item.json.payment_method = payment;\n    }\n\n    item.json.customer_name = (item.json.customer_name && item.json.customer_name.trim() !== \"\") ? item.json.customer_name : aiData.customer_name;\n    \n    let rawNumber = (item.json.customer_number && item.json.customer_number.trim() !== \"\") ? item.json.customer_number : aiData.customer_number;\n    item.json.customer_number = rawNumber ? rawNumber.replace(/[^0-9]/g, '') : \"\";\n\n    // 🔥 THE FIX: Change \"total_price\" to \"total\" so your backend recognizes it!\n    item.json.total = aiData.total_price ? Number(aiData.total_price) : 0;\n    \n    item.json.order_date = new Date().toISOString().split('T')[0];\n  } catch (error) {\n    item.json.customer_message = \"Sorry, I'm still learning! Could you repeat that?\";\n    item.json.customer_address = \"\";\n    item.json.customer_order = \"\";\n    item.json.payment_method = \"\";\n    item.json.total = 0;\n  }\n\n  // 🛡️ The Simplified Gatekeeper: Instant Pass\n  let isComplete = false;\n\n  if (item.json.customer_name !== \"\" && \n      item.json.customer_address !== \"\" && \n      item.json.customer_order !== \"\" && \n      item.json.payment_method !== \"\") {\n    \n    // All info is gathered. Instantly mark as true so it goes to the DB.\n    isComplete = true; \n\n    // Hard-override the final message to guarantee perfection\n    if (item.json.payment_method === \"JazzCash\") {\n      item.json.customer_message = \"Order confirmed! Your total is Rs. \" + item.json.total + \". Please pay to JazzCash: 0300-7918682 and show the payment screenshot to our rider when they arrive in about 30 minutes! 🛵\";\n    } else if (item.json.payment_method === \"Cash on Delivery\") {\n      item.json.customer_message = \"Order confirmed! Your total is Rs. \" + item.json.total + \". Please have the cash ready for our rider, arriving in about 30 minutes! 🍔\";\n    }\n  }\n\n  item.json.should_proceed = isComplete;\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        208
+      ],
+      "id": "26b39805-1fbf-45f7-bb59-27bb61a301f8",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "54080723-5617-4e59-86db-039b33de8e11",
+              "leftValue": "={{ $json.should_proceed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "218dd1bf-ae3f-477e-af5e-3ba7e0c15103",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -384,
+        720
+      ],
+      "id": "759fea69-d5ee-4cfe-a7c6-feeea3750267",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "wO31Te8KaFnFxqzD",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1129462313575590",
+        "recipientPhoneNumber": "=+{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "=Thank you for your order it will arrive in 30 minutes ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        304
+      ],
+      "id": "99bd4a04-281c-4d31-9b20-f338eb7f7a4f",
+      "name": "Send message5",
+      "webhookId": "461e504f-1ba5-49d6-be5e-6101452a297b",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "9qiLEmX5QbYxKtne",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=+{{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -464,
+        320
+      ],
+      "id": "1b95fa78-0bd9-461e-a5a8-b7624130f254",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1129462313575590",
+        "recipientPhoneNumber": "=+{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        304
+      ],
+      "id": "9564ea45-6bd3-40fc-8ca2-44066f17d87b",
+      "name": "Send message6",
+      "webhookId": "461e504f-1ba5-49d6-be5e-6101452a297b",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "9qiLEmX5QbYxKtne",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0.5,
+          "topP": 0.8
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -576,
+        320
+      ],
+      "id": "7f38efe9-6fc7-4a5e-8e7a-34dc8a97fea0",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "owfCGY6jYn5cVg9d",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1129462313575590/register",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"messaging_product\": \"whatsapp\",\n  \"pin\": \"123456\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -992,
+        -144
+      ],
+      "id": "37d12951-40bf-457c-8cb7-e4adb818478f",
+      "name": "HTTP Request3",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "hpooDYmuOQCbDxeI",
+          "name": "Bearer Auth account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "WhatsApp Trigger": [
+      {
+        "json": {
+          "messaging_product": "whatsapp",
+          "metadata": {
+            "display_phone_number": "15551437681",
+            "phone_number_id": "1036626596204717"
+          },
+          "contacts": [
+            {
+              "profile": {
+                "name": "Nafay Hassan"
+              },
+              "wa_id": "923094777200",
+              "user_id": "PK.1435252091186359"
+            }
+          ],
+          "messages": [
+            {
+              "from": "923094777200",
+              "from_user_id": "PK.1435252091186359",
+              "id": "wamid.HBgMOTIzMDk0Nzc3MjAwFQIAEhggQUNENDM3MTgzNjYyMDNBOUY2RTA2RDY3ODU4MTk3NzQA",
+              "timestamp": "1777112510",
+              "text": {
+                "body": "Jazzcash"
+              },
+              "type": "text"
+            }
+          ],
+          "field": "messages"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Code in JavaScript": [
+      {
+        "json": {
+          "output": "{\n  \"customer_message\": \"I appreciate your choice of JazzCash! Let's get your order started. What would you like to have? 🍕\",\n  \"customer_name\": \"Nafay Hassan\",\n  \"customer_number\": \"923094777200\",\n  \"customer_address\": \"\",\n  \"customer_order\": \"\",\n  \"total_price\": 0,\n  \"payment_method\": \"JazzCash\"\n}",
+          "customer_message": "I appreciate your choice of JazzCash! Let's get your order started. What would you like to have? 🍕",
+          "customer_address": "",
+          "customer_order": "",
+          "payment_method": "JazzCash",
+          "customer_name": "Nafay Hassan",
+          "customer_number": "923094777200",
+          "total_price": 0,
+          "total": 0,
+          "order_date": "2026-04-26",
+          "should_proceed": false
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "AI Agent": [
+      {
+        "json": {
+          "output": "{\n  \"customer_message\": \"I understand you're set on JazzCash! Please tell me what you'd like to order today! 🍔\",\n  \"customer_name\": \"Nafay Hassan\",\n  \"customer_number\": \"923094777200\",\n  \"customer_address\": \"\",\n  \"customer_order\": \"\",\n  \"total_price\": 0,\n  \"payment_method\": \"JazzCash\"\n}"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        [
+          {
+            "node": "Send message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send message3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download media": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message3": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message4": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send message6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message6": {
+      "main": [
+        [
+          {
+            "node": "Send message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message2": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Karachi",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "42a1cba5-bc99-49eb-b7ab-82f37d54bb41",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "daf7de568abf00dc9c27cea0ac84ff6644d4a0f4167d8b57b818a0adb3c36202"
+  },
+  "id": "2uFRP1DshV9JFZsl",
+  "tags": []
+}

@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Fast One — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#D4161A;--dark-red:#9B0E11;--black:#080808;--surface:#111;
+  --surface2:#1a1a1a;--border:rgba(255,255,255,.07);--gold:#F5A623;
+  --white:#F9F5EF;--muted:rgba(249,245,239,.4);--green:#4ade80;
+  --blue:#60a5fa;--purple:#c084fc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--black);color:var(--white);font-family:'Montserrat',sans-serif;}
+input,select,textarea,button{font-family:inherit;}
+a{color:inherit;text-decoration:none;}
+
+/* ── LOGIN ── */
+#login-screen{
+  position:fixed;inset:0;background:var(--black);
+  display:flex;align-items:center;justify-content:center;z-index:1000;
+  background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.012) 0px,rgba(255,255,255,.012) 1px,transparent 1px,transparent 40px);
+}
+.login-box{
+  background:var(--surface);border:2px solid var(--red);
+  padding:44px 40px;width:380px;
+  box-shadow:0 30px 80px rgba(212,22,26,.2);
+}
+.login-brand{text-align:center;margin-bottom:32px;}
+.login-brand h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:5px;color:var(--red);}
+.login-brand p{font-size:.65rem;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:.63rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.form-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--white);padding:13px 15px;font-size:.85rem;outline:none;
+  transition:border-color .2s;
+}
+.form-input:focus{border-color:var(--red);}
+.form-input::placeholder{color:rgba(249,245,239,.18);}
+.login-btn{
+  width:100%;background:var(--red);color:#fff;border:none;
+  font-weight:900;font-size:.8rem;letter-spacing:3px;text-transform:uppercase;
+  padding:15px;cursor:pointer;transition:background .2s;margin-top:4px;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.login-btn:hover{background:var(--dark-red);}
+.login-btn:disabled{background:#333;color:#555;cursor:not-allowed;clip-path:none;}
+.login-error{color:#f87171;font-size:.72rem;margin-top:10px;min-height:18px;letter-spacing:.5px;}
+.login-footer{text-align:center;margin-top:20px;font-size:.6rem;color:rgba(249,245,239,.15);letter-spacing:1px;}
+
+/* ── APP SHELL ── */
+#app{display:none;height:100vh;flex-direction:column;}
+#app.visible{display:flex;}
+
+/* Top bar */
+.topbar{
+  background:var(--surface);border-bottom:3px solid var(--red);
+  padding:0 28px;height:60px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:3px;color:var(--red);}
+.topbar-sep{width:1px;height:24px;background:var(--border);}
+.topbar-subtitle{font-size:.65rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.user-badge{
+  background:rgba(212,22,26,.1);border:1px solid rgba(212,22,26,.3);
+  padding:5px 12px;font-size:.65rem;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--red);
+}
+.webhook-indicator{
+  display:flex;align-items:center;gap:6px;
+  font-size:.62rem;font-weight:700;letter-spacing:1px;color:var(--muted);
+}
+.webhook-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:blink 2s infinite;}
+.webhook-dot.offline{background:#ef4444;animation:none;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.logout-btn{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-size:.63rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  padding:7px 16px;cursor:pointer;transition:all .2s;
+}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.refresh-btn{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-size:.63rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  padding:7px 14px;cursor:pointer;transition:all .2s;
+}
+.refresh-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* Stats strip */
+.stats-strip{
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  padding:14px 28px;display:flex;gap:32px;flex-wrap:wrap;flex-shrink:0;
+  align-items:center;
+}
+.stat{display:flex;flex-direction:column;gap:2px;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:1px;line-height:1;}
+.stat-val.red{color:var(--red);}
+.stat-val.gold{color:var(--gold);}
+.stat-val.green{color:var(--green);}
+.stat-val.blue{color:var(--blue);}
+.stat-label{font-size:.58rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.stats-time{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(249,245,239,.2);}
+
+/* Main layout */
+.main-layout{display:flex;flex:1;min-height:0;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{
+  width:210px;background:var(--surface);border-right:1px solid var(--border);
+  flex-shrink:0;overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.sidebar-section{
+  font-size:.55rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(249,245,239,.18);padding:18px 20px 6px;
+}
+.nav-btn{
+  display:flex;align-items:center;gap:10px;
+  background:none;border:none;border-left:3px solid transparent;
+  color:var(--muted);font-weight:700;font-size:.72rem;letter-spacing:1.5px;
+  text-transform:uppercase;padding:12px 20px;cursor:pointer;
+  text-align:left;width:100%;transition:all .15s;
+}
+.nav-btn:hover{color:var(--white);background:rgba(255,255,255,.03);}
+.nav-btn.active{color:var(--white);border-left-color:var(--red);background:rgba(212,22,26,.08);}
+.nav-badge{
+  margin-left:auto;background:var(--red);color:#fff;
+  font-size:.55rem;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center;
+}
+.nav-badge.gold{background:var(--gold);color:#000;}
+
+/* Content */
+.content{flex:1;overflow-y:auto;padding:24px 28px;}
+
+/* ── PANELS ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* Section header */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3px;}
+.header-actions{display:flex;gap:8px;}
+.btn{
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+  font-size:.65rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:9px 18px;cursor:pointer;transition:all .2s;
+}
+.btn:hover{border-color:var(--white);color:var(--white);}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff;}
+.btn.primary:hover{background:var(--dark-red);}
+.btn.success{background:#14532d;border-color:#4ade80;color:#4ade80;}
+.btn.success:hover{background:#15803d;}
+.btn.danger{border-color:rgba(239,68,68,.4);}
+.btn.danger:hover{border-color:#ef4444;color:#ef4444;}
+
+/* Filter tabs */
+.filter-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;}
+.filter-tab{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-size:.63rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:8px 14px;cursor:pointer;transition:all .2s;
+}
+.filter-tab:hover{border-color:rgba(255,255,255,.25);color:var(--white);}
+.filter-tab.active{background:var(--red);border-color:var(--red);color:#fff;}
+.filter-tab .cnt{font-size:.55rem;opacity:.65;margin-left:5px;}
+
+/* ── ORDERS TABLE ── */
+.table-container{overflow-x:auto;border:1px solid var(--border);border-radius:2px;}
+.data-table{width:100%;border-collapse:collapse;min-width:1000px;font-size:.75rem;}
+.data-table th{
+  background:#141414;color:var(--muted);font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;padding:12px 14px;
+  text-align:left;white-space:nowrap;border-bottom:2px solid var(--red);
+  position:sticky;top:0;z-index:1;border-right:1px solid var(--border);
+}
+.data-table th:last-child{border-right:none;}
+.data-table td{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  vertical-align:middle;border-right:1px solid rgba(255,255,255,.03);
+}
+.data-table td:last-child{border-right:none;}
+.data-table tr:hover td{background:rgba(212,22,26,.04);}
+.col-ref{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);letter-spacing:1px;white-space:nowrap;}
+.col-phone{font-family:'JetBrains Mono',monospace;font-size:.7rem;white-space:nowrap;}
+.col-name{font-weight:700;font-size:.8rem;}
+.col-items{max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.col-date{font-family:'JetBrains Mono',monospace;font-size:.68rem;white-space:nowrap;color:var(--muted);}
+.tbl-select{
+  background:var(--surface2);border:1px solid var(--border);color:var(--white);
+  font-family:'Montserrat',sans-serif;font-size:.65rem;font-weight:700;
+  padding:5px 8px;cursor:pointer;outline:none;max-width:150px;
+  transition:border-color .2s;
+}
+.tbl-select:focus{border-color:var(--red);}
+.confirm-true{color:var(--green)!important;}
+.confirm-false{color:rgba(239,68,68,.65)!important;}
+.proof-thumb{
+  width:42px;height:42px;object-fit:cover;cursor:pointer;display:inline-block;
+  border:2px solid var(--border);transition:border-color .2s,transform .2s;
+  vertical-align:middle;
+}
+.proof-thumb:hover{border-color:var(--gold);transform:scale(1.08);}
+.proof-thumb+.proof-thumb{margin-left:4px;opacity:.75;}
+.del-btn{
+  background:none;border:none;color:rgba(239,68,68,.3);cursor:pointer;
+  font-size:.9rem;padding:5px 9px;transition:color .15s;
+}
+.del-btn:hover{color:#f87171;}
+.phone-link{
+  color:var(--blue);cursor:pointer;font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;text-decoration:underline dotted;transition:color .15s;
+}
+.phone-link:hover{color:var(--gold);}
+.new-indicator{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:var(--red);margin-right:6px;animation:blink 1.5s infinite;
+}
+
+/* Status pills */
+.s-pill{font-size:.58rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;white-space:nowrap;}
+.s-new{background:rgba(245,166,35,.15);color:var(--gold);}
+.s-confirmed{background:rgba(96,165,250,.15);color:var(--blue);}
+.s-preparing{background:rgba(192,132,252,.15);color:var(--purple);}
+.s-out_for_delivery{background:rgba(74,222,128,.12);color:var(--green);}
+.s-delivered{background:rgba(34,197,94,.2);color:#22c55e;}
+.s-cancelled{background:rgba(239,68,68,.1);color:#f87171;}
+
+/* ── SEARCH PANEL ── */
+.search-row{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+.search-wrap{flex:1;position:relative;min-width:240px;}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;opacity:.35;}
+.search-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--white);padding:13px 14px 13px 42px;font-size:.85rem;outline:none;
+  transition:border-color .2s;
+}
+.search-input:focus{border-color:var(--red);}
+.search-input::placeholder{color:rgba(249,245,239,.18);}
+.search-type{
+  background:var(--surface2);border:1px solid var(--border);color:var(--white);
+  padding:13px 15px;font-size:.75rem;font-weight:700;cursor:pointer;outline:none;
+}
+.search-type option{background:#1a1a1a;}
+
+/* Customer profile */
+.profile-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-left:4px solid var(--red);padding:22px 26px;margin-bottom:16px;
+  display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;
+}
+.profile-name{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;margin-bottom:4px;}
+.profile-phone{font-family:'JetBrains Mono',monospace;font-size:.88rem;color:var(--gold);margin-bottom:12px;}
+.profile-stats{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:12px;}
+.pstat{display:flex;flex-direction:column;gap:1px;}
+.pstat-val{font-weight:800;font-size:.9rem;color:var(--white);}
+.pstat-val.gold{color:var(--gold);}
+.pstat-key{font-size:.58rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.profile-addr{font-size:.75rem;color:var(--muted);margin-bottom:12px;}
+.notes-row{display:flex;gap:8px;}
+.notes-input{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--white);padding:9px 13px;font-size:.75rem;outline:none;transition:border-color .2s;}
+.notes-input:focus{border-color:var(--gold);}
+.notes-save{background:none;border:1px solid var(--border);color:var(--muted);font-size:.63rem;font-weight:800;letter-spacing:1px;padding:9px 15px;cursor:pointer;transition:all .2s;}
+.notes-save:hover{border-color:var(--gold);color:var(--gold);}
+
+/* Order history timeline */
+.history-label{
+  font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;
+  color:var(--muted);display:flex;align-items:center;gap:12px;margin-bottom:12px;
+}
+.history-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.timeline{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;}
+.t-row{
+  background:var(--surface);border:1px solid var(--border);
+  padding:14px 18px;display:grid;
+  grid-template-columns:120px 1fr auto;gap:16px;align-items:start;
+  transition:border-color .2s;
+}
+.t-row:hover{border-color:rgba(212,22,26,.3);}
+.t-ref{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;color:var(--gold);}
+.t-date{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--muted);margin-top:3px;}
+.t-source{font-size:.58rem;color:rgba(249,245,239,.2);margin-top:2px;letter-spacing:1px;text-transform:uppercase;}
+.t-items{font-size:.77rem;color:rgba(249,245,239,.7);line-height:1.6;margin-bottom:8px;}
+.t-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.t-total{font-weight:800;font-size:.88rem;}
+.t-payment{font-size:.68rem;color:var(--muted);}
+.t-paid{font-size:.62rem;font-weight:800;color:var(--green);}
+.t-notes{font-size:.68rem;color:rgba(245,166,35,.6);font-style:italic;}
+.t-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+
+/* Empty / loading */
+.empty-state{text-align:center;padding:64px 20px;color:var(--muted);}
+.empty-icon{font-size:3rem;opacity:.3;margin-bottom:12px;}
+.empty-text{font-size:.8rem;letter-spacing:2px;text-transform:uppercase;}
+.empty-sub{font-size:.68rem;margin-top:6px;opacity:.7;}
+.loading-row td{text-align:center;padding:48px;color:var(--muted);}
+
+/* Lightbox */
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#lightbox.open{display:flex;}
+#lightbox img{max-width:88vw;max-height:82vh;border:3px solid var(--red);}
+#lightbox-close{position:absolute;top:18px;right:24px;background:none;border:none;color:#fff;font-size:2.2rem;cursor:pointer;line-height:1;opacity:.7;transition:opacity .2s;}
+#lightbox-close:hover{opacity:1;}
+#lightbox-label{font-size:.68rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border-left:4px solid var(--red);color:var(--white);font-size:.78rem;font-weight:700;padding:12px 22px;z-index:9998;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;letter-spacing:.5px;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(212,22,26,.25);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .topbar-subtitle,.topbar-sep{display:none;}
+  .stats-strip{gap:16px;padding:12px 16px;}
+  .content{padding:16px;}
+  .profile-card{grid-template-columns:1fr;}
+  .t-row{grid-template-columns:1fr;}
+  .search-row{flex-direction:column;}
+}
+
+/* ════ KDS - Kitchen Display System ════ */
+#panel-kds { background:var(--black); min-height:100%; padding-bottom:2rem; }
+.kds-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px; padding:4px;
+}
+.kds-empty { grid-column:1/-1; text-align:center; padding:80px 20px;
+  font-size:1.2rem; color:var(--muted); letter-spacing:2px; }
+.kds-card {
+  background:var(--surface); border:2px solid var(--border);
+  border-radius:8px; padding:18px; display:flex; flex-direction:column; gap:12px;
+  transition:border-color .2s;
+  animation:kdsSlideIn .3s ease;
+}
+@keyframes kdsSlideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.kds-card.status-new    { border-color:var(--gold); box-shadow:0 0 16px rgba(245,166,35,.15); }
+.kds-card.status-confirmed { border-color:var(--blue); box-shadow:0 0 16px rgba(96,165,250,.12); }
+.kds-hdr { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.kds-ref  { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:2px; color:var(--gold); }
+.kds-elapsed {
+  background:rgba(245,166,35,.15); color:var(--gold);
+  font-size:.65rem; font-weight:800; letter-spacing:1px; padding:4px 10px; border-radius:4px;
+}
+.kds-elapsed.urgent { background:rgba(239,68,68,.2); color:#f87171; animation:blink 1s infinite; }
+.kds-items {
+  font-size:1rem; font-weight:700; line-height:1.7;
+  border-top:1px solid var(--border); padding-top:10px;
+  min-height:60px;
+}
+.kds-item-line { display:flex; align-items:center; gap:8px; padding:3px 0; }
+.kds-item-qty {
+  background:var(--red); color:#fff; font-size:.72rem; font-weight:900;
+  min-width:24px; height:24px; border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+}
+.kds-source { font-size:.62rem; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
+.kds-mark-btn {
+  width:100%; background:var(--green); color:#000;
+  font-family:'Montserrat',sans-serif; font-weight:900; font-size:.88rem;
+  letter-spacing:2px; text-transform:uppercase;
+  padding:14px; cursor:pointer; border:none; border-radius:6px;
+  transition:background .2s, transform .15s;
+  margin-top:4px;
+}
+.kds-mark-btn:hover { background:#16a34a; transform:scale(1.02); }
+
+/* ════ MENU MANAGEMENT ════ */
+.menu-mgmt-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px;
+}
+.menu-item-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:8px;
+  overflow:hidden; transition:border-color .2s;
+}
+.menu-item-card:hover { border-color:rgba(212,22,26,.35); }
+.menu-item-card.unavailable { opacity:.5; filter:grayscale(.7); }
+.mic-img { width:100%; aspect-ratio:16/9; object-fit:cover; background:var(--surface2); }
+.mic-body { padding:12px; }
+.mic-name { font-weight:800; font-size:.88rem; margin-bottom:3px; }
+.mic-cat  { font-size:.62rem; letter-spacing:1.5px; text-transform:uppercase; color:var(--red); }
+.mic-price { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--gold); margin-top:6px; }
+.mic-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 12px; border-top:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+}
+.toggle-switch { display:flex; align-items:center; gap:7px; cursor:pointer; }
+.toggle-track {
+  width:34px; height:18px; border-radius:99px; background:rgba(239,68,68,.4);
+  position:relative; transition:background .2s; cursor:pointer; border:none;
+}
+.toggle-track.on { background:var(--green); }
+.toggle-thumb {
+  position:absolute; top:2px; left:2px; width:14px; height:14px;
+  border-radius:50%; background:#fff; transition:left .2s;
+}
+.toggle-track.on .toggle-thumb { left:18px; }
+.toggle-label { font-size:.65rem; font-weight:800; letter-spacing:1px; color:var(--muted); }
+.toggle-track.on + .toggle-label { color:var(--green); }
+.mic-actions { display:flex; gap:6px; }
+.mic-edit-btn, .mic-del-btn {
+  background:none; border:1px solid var(--border); border-radius:4px;
+  font-size:.7rem; font-weight:700; padding:5px 10px; cursor:pointer; transition:all .2s;
+}
+.mic-edit-btn:hover { border-color:var(--gold); color:var(--gold); }
+.mic-del-btn:hover  { border-color:#f87171; color:#f87171; }
+.menu-cat-tab {
+  background:none; border:1px solid var(--border); color:var(--muted);
+  font-size:.65rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase;
+  padding:7px 14px; cursor:pointer; border-radius:4px; transition:all .2s;
+}
+.menu-cat-tab.active { background:var(--red); border-color:var(--red); color:#fff; }
+
+/* ════ PRINT RECEIPT ════ */
+.print-btn {
+  background:none; border:1px solid rgba(255,255,255,.2); color:var(--muted);
+  font-size:.8rem; padding:5px 9px; cursor:pointer; border-radius:4px;
+  transition:all .2s;
+}
+.print-btn:hover { border-color:var(--white); color:var(--white); }
+
+/* ════ AUDIO ALERT ════ */
+#audio-alert-banner {
+  display:none; position:fixed; top:64px; left:50%; transform:translateX(-50%);
+  z-index:8000;
+  background:var(--red); color:#fff;
+  font-size:.78rem; font-weight:800; letter-spacing:2px;
+  padding:10px 22px; border-radius:0 0 8px 8px;
+  box-shadow:0 8px 24px rgba(212,22,26,.5);
+  animation:slideDown .3s ease;
+}
+#audio-alert-banner.show { display:block; }
+@keyframes slideDown { from{transform:translateX(-50%) translateY(-100%)} to{transform:translateX(-50%) translateY(0)} }
+
+/* ════ REMEMBER ME ════ */
+.remember-row {
+  display:flex; align-items:center; gap:10px; margin-bottom:6px;
+}
+.remember-row input { width:16px; height:16px; accent-color:var(--red); cursor:pointer; }
+.remember-row label { font-size:.7rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); cursor:pointer; }
+
+/* ════ RECEIPT PRINT MEDIA QUERY ════ */
+@media print {
+  * { visibility:hidden !important; background:white !important; color:black !important; }
+  #receipt-area, #receipt-area * { visibility:visible !important; }
+  #receipt-area {
+    display:block !important;
+    position:fixed !important; inset:0 !important; z-index:99999 !important;
+    background:white !important; padding:8mm !important;
+    font-family:'Courier New',Courier,monospace !important;
+    font-size:11px !important; line-height:1.5 !important;
+    width:80mm !important;
+    color:black !important;
+  }
+  .rcp-brand { text-align:center; font-size:16px; font-weight:900; letter-spacing:3px; margin-bottom:4px; }
+  .rcp-tagline { text-align:center; font-size:9px; margin-bottom:6px; }
+  .rcp-divider { border:none; border-top:1px dashed #000; margin:5px 0; }
+  .rcp-meta { font-size:9px; margin:2px 0; }
+  .rcp-section { font-weight:900; font-size:10px; margin:6px 0 3px; letter-spacing:1px; }
+  .rcp-item { display:flex; justify-content:space-between; font-size:10px; margin:2px 0; }
+  .rcp-total { display:flex; justify-content:space-between; font-size:12px; font-weight:900; margin-top:5px; }
+  .rcp-footer { text-align:center; font-size:9px; margin-top:8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-brand">
+      <h1>⚡ FAST ONE</h1>
+      <p>Restaurant Management System</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input class="form-input" id="l-user" type="text" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div style="position:relative">
+        <input class="form-input" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:48px">
+        <button type="button" id="toggle-pass" onclick="togglePassword()" style="
+          position:absolute;right:0;top:0;bottom:0;width:46px;
+          background:none;border:none;cursor:pointer;
+          color:rgba(249,245,239,.35);font-size:1.1rem;
+          display:flex;align-items:center;justify-content:center;
+          transition:color .2s;
+        " title="Show/hide password">👁</button>
+      </div>
+    </div>
+    <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;margin-bottom:6px">
+      <input type="checkbox" id="remember-me" style="width:16px;height:16px;accent-color:var(--red);cursor:pointer">
+      <label for="remember-me" style="font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);cursor:pointer">Remember Me</label>
+    </div>
+    <button class="login-btn" id="login-btn">Login to Admin Panel →</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-footer">SECURE ACCESS · AUTHORISED PERSONNEL ONLY</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     APP SHELL
+══════════════════════════════ -->
+<div id="app">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">⚡ FAST ONE</div>
+      <div class="topbar-sep"></div>
+      <div class="topbar-subtitle">Admin Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <div class="webhook-indicator" id="webhook-indicator">
+        <span class="webhook-dot offline" id="webhook-dot"></span>
+        <span id="webhook-text">API</span>
+      </div>
+      <div class="user-badge" id="user-badge">Admin</div>
+      <button id="mute-btn" title="Toggle chime" onclick="toggleMute()" style="background:none;border:1px solid var(--border);color:var(--muted);font-size:.9rem;padding:6px 12px;cursor:pointer;border-radius:4px;transition:all .2s;letter-spacing:1px">🔊</button>
+      <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="stat"><div class="stat-val red" id="s-new">—</div><div class="stat-label">New Orders</div></div>
+    <div class="stat"><div class="stat-val gold" id="s-today">—</div><div class="stat-label">Today's Orders</div></div>
+    <div class="stat"><div class="stat-val green" id="s-revenue">—</div><div class="stat-label">Today's Revenue</div></div>
+    <div class="stat"><div class="stat-val blue" id="s-total">—</div><div class="stat-label">All Time</div></div>
+    <div class="stat"><div class="stat-val" id="s-delivered">—</div><div class="stat-label">Delivered</div></div>
+    <div class="stats-time" id="s-time">Last refresh: —</div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="main-layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">Orders</div>
+      <button class="nav-btn active" data-panel="orders">
+        <span>📋</span> All Orders
+        <span class="nav-badge" id="nb-all">0</span>
+      </button>
+      <button class="nav-btn" data-panel="orders" data-filter="new">
+        <span>🔴</span> New
+        <span class="nav-badge" id="nb-new">0</span>
+      </button>
+      <button class="nav-btn" data-panel="orders" data-filter="confirmed">
+        <span>🔵</span> Confirmed
+      </button>
+      <button class="nav-btn" data-panel="orders" data-filter="preparing">
+        <span>🟣</span> Preparing
+      </button>
+      <button class="nav-btn" data-panel="orders" data-filter="out_for_delivery">
+        <span>🟢</span> Out for Delivery
+      </button>
+      <button class="nav-btn" data-panel="orders" data-filter="delivered">
+        <span>✅</span> Delivered
+      </button>
+      <button class="nav-btn" data-panel="orders" data-filter="cancelled">
+        <span>❌</span> Cancelled
+      </button>
+      <div class="sidebar-section">Customers</div>
+      <button class="nav-btn" data-panel="search">
+        <span>🔍</span> Search Customer
+      </button>
+      <div class="sidebar-section">Kitchen</div>
+      <button class="nav-btn" data-panel="kds">
+        <span>👨‍🍳</span> Kitchen View
+        <span class="nav-badge gold" id="nb-kds">0</span>
+      </button>
+      <div class="sidebar-section">Menu</div>
+      <button class="nav-btn" data-panel="menu-mgmt">
+        <span>📋</span> Menu Items
+      </button>
+      <div class="sidebar-section">Tools</div>
+      <button class="nav-btn" onclick="exportCSV()">
+        <span>⬇</span> Export CSV
+      </button>
+    </div>
+
+    <!-- Content area -->
+    <div class="content">
+
+      <!-- ── ORDERS PANEL ── -->
+      <div class="panel active" id="panel-orders">
+        <div class="section-header">
+          <div class="section-title">Order Backlog</div>
+          <div class="header-actions">
+            <button class="btn success" onclick="exportCSV()">⬇ Export CSV</button>
+          </div>
+        </div>
+
+        <div class="filter-tabs" id="filter-tabs">
+          <button class="filter-tab active" data-status="all">All<span class="cnt" id="ft-all"></span></button>
+          <button class="filter-tab" data-status="new">🔴 New<span class="cnt" id="ft-new"></span></button>
+          <button class="filter-tab" data-status="confirmed">🔵 Confirmed</button>
+          <button class="filter-tab" data-status="preparing">🟣 Preparing</button>
+          <button class="filter-tab" data-status="out_for_delivery">🟢 Out for Delivery</button>
+          <button class="filter-tab" data-status="delivered">✅ Delivered</button>
+          <button class="filter-tab" data-status="cancelled">❌ Cancelled</button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Order Ref</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Order Items</th>
+                <th>Date & Time</th>
+                <th>Payment</th>
+                <th>Receipt</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Confirmed</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody">
+              <tr class="loading-row"><td colspan="13"><span class="spinner"></span> Loading orders…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── SEARCH PANEL ── -->
+      <div class="panel" id="panel-search">
+        <div class="section-title" style="margin-bottom:22px">Customer Search</div>
+
+        <div class="search-row">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input class="search-input" id="search-q" type="search" placeholder="Enter phone number, name, or order ref…">
+          </div>
+          <select class="search-type" id="search-type">
+            <option value="phone">📞 Phone Number</option>
+            <option value="name">👤 Customer Name</option>
+            <option value="order_ref">🧾 Order Reference</option>
+          </select>
+          <button class="btn primary" id="search-btn" onclick="doSearch()">Search →</button>
+        </div>
+
+        <div id="search-results">
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-text">Search for a customer</div>
+            <div class="empty-sub">Search by phone number, name, or order reference to see complete order history</div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ── KITCHEN DISPLAY (KDS) ── -->
+      <div class="panel" id="panel-kds">
+        <div class="section-header">
+          <div class="section-title" style="color:var(--gold)">👨‍🍳 Kitchen Display</div>
+          <div style="font-size:.72rem;color:var(--muted);letter-spacing:1px">NEW + CONFIRMED orders only · Auto-refreshes every 30s</div>
+        </div>
+        <div id="kds-grid" class="kds-grid">
+          <div class="kds-empty">No active orders right now 🎉</div>
+        </div>
+      </div>
+
+      <!-- ── MENU MANAGEMENT ── -->
+      <div class="panel" id="panel-menu-mgmt">
+        <div class="section-header">
+          <div class="section-title">Menu Items</div>
+          <div class="header-actions">
+            <button class="btn primary" onclick="openAddItemModal()">＋ Add Item</button>
+          </div>
+        </div>
+        <div id="menu-cat-tabs" style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap"></div>
+        <div id="menu-items-grid" class="menu-mgmt-grid">
+          <div class="empty-state"><span class="spinner"></span><div class="empty-text" style="margin-top:12px">Loading…</div></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-layout -->
+</div><!-- /app -->
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <button id="lightbox-close">×</button>
+  <img id="lightbox-img" src="" alt="Receipt">
+  <div id="lightbox-label">JazzCash Payment Receipt</div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  FAST ONE ADMIN PANEL
+//  Connects to: Express backend API (/api/admin/*)
+//  Change BASE_URL to your server domain before deploying
+// ═══════════════════════════════════════════════════════════
+
+const BASE_URL = 'https://fastonefoodpoint.duckdns.org';
+const API      = BASE_URL + '/api/admin';
+
+let authToken     = localStorage.getItem('fo_admin_token') || sessionStorage.getItem('fo_admin_token') || '';
+let currentUser   = null;
+let currentStatus = 'all';
+let allOrders     = [];
+let statsData     = {};
+
+// ── UTILS ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function toast(msg, dur=2800){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d=new Date(iso);
+  return d.toLocaleDateString('en-GB')+'\n'+d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtRs(n){ return 'Rs '+(parseFloat(n)||0).toLocaleString(); }
+function statusLabel(s){
+  return {new:'🔴 New',confirmed:'🔵 Confirmed',preparing:'🟣 Preparing',
+          out_for_delivery:'🟢 Out',delivered:'✅ Delivered',cancelled:'❌ Cancelled'}[s]||s;
+}
+function statusPill(s){
+  return `<span class="s-pill s-${s}">${statusLabel(s)}</span>`;
+}
+
+// ── API HELPER ─────────────────────────────────────────────
+async function apiFetch(path, opts={}){
+  try{
+    const res = await fetch(API+path, {
+      headers: {
+        'Authorization': 'Bearer '+authToken,
+        'Content-Type': 'application/json',
+        ...(opts.headers||{})
+      },
+      ...opts,
+    });
+    // Silent rate-limit: 429 — do not crash or toast, just bail
+    if(res.status === 429){ return null; }
+    if(res.status === 401){ logout(); return null; }
+
+    // Safe JSON parse — backend may return empty body on 204/200 PATCH/DELETE
+    let data = {};
+    try { data = await res.json(); } catch(_) { /* empty body is fine */ }
+
+    setApiOnline(res.ok);
+    return { ok:res.ok, status:res.status, data };
+  } catch(e){
+    setApiOnline(false);
+    return null;
+  }
+}
+
+function setApiOnline(online){
+  const dot=$('webhook-dot'); const txt=$('webhook-text');
+  dot.className='webhook-dot'+(online?'':' offline');
+  txt.textContent=online?'API Online':'API Offline';
+}
+
+// ── LOGIN ───────────────────────────────────────────────────
+function togglePassword(){
+  const inp=$('l-pass'); const btn=$('toggle-pass');
+  const show = inp.type==='password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+  btn.style.color = show ? 'var(--gold)' : 'rgba(249,245,239,.35)';
+}
+
+// ── STANDALONE MODE CREDENTIALS (used when backend is offline) ──
+const LOCAL_ADMIN_USER = 'admin';
+const LOCAL_ADMIN_PASS = 'fastone2024';
+const LOCAL_ADMIN_KEY  = 'fo_local_admin';   // localStorage session key
+let   isLocalMode      = false;              // true = using localStorage, false = backend API
+
+async function doLogin(){
+  const username = $('l-user').value.trim();
+  const password = $('l-pass').value;
+  $('login-error').textContent = '';
+  if(!username || !password){ $('login-error').textContent = 'Please enter both fields'; return; }
+
+  $('login-btn').disabled = true;
+  $('login-btn').textContent = 'Authenticating…';
+
+  // ── 1. Try backend API first ──────────────────────────────────
+  let backendReachable = false;
+  try{
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);   // 5s timeout
+    const res = await fetch(API + '/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username, password}),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    backendReachable = true;
+    const data = await res.json();
+    if(res.ok){
+      authToken = data.token;
+      currentUser = { username:data.username, role:data.role };
+      const rememberMe = document.getElementById('remember-me')?.checked;
+      if(rememberMe) localStorage.setItem('fo_admin_token', authToken);
+      else           sessionStorage.setItem('fo_admin_token', authToken);
+      isLocalMode = false;
+      bootApp();
+      return;
+    } else {
+      $('login-error').textContent = data.error || 'Invalid credentials';
+      return;
+    }
+  } catch(e){
+    // Backend unreachable — fall through to local mode
+    backendReachable = false;
+  } finally{
+    $('login-btn').disabled = false;
+    $('login-btn').textContent = 'Login to Admin Panel →';
+  }
+
+  // ── 2. Backend offline — use local password check ─────────────
+  if(!backendReachable){
+    if(username === LOCAL_ADMIN_USER && password === LOCAL_ADMIN_PASS){
+      isLocalMode = true;
+      currentUser = { username:'admin', role:'super' };
+      const rememberMeLocal = document.getElementById('remember-me')?.checked;
+      if(rememberMeLocal) localStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
+      else                sessionStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
+      setApiOnline(false);
+      bootApp();
+    } else {
+      $('login-error').textContent = 'Invalid credentials';
+    }
+  }
+}
+
+function logout(){
+  localStorage.removeItem('fo_admin_token'); sessionStorage.removeItem('fo_admin_token');
+  localStorage.removeItem(LOCAL_ADMIN_KEY); sessionStorage.removeItem(LOCAL_ADMIN_KEY);
+  authToken=''; currentUser=null; allOrders=[]; isLocalMode=false;
+  $('app').classList.remove('visible');
+  $('login-screen').style.display='flex';
+  $('l-pass').value='';
+  $('login-error').textContent='';
+}
+
+// ── APP BOOT ────────────────────────────────────────────────
+async function bootApp(){
+  $('login-screen').style.display='none';
+  $('app').classList.add('visible');
+  const modeLabel = isLocalMode ? 'LOCAL MODE' : currentUser?.role || 'admin';
+  $('user-badge').textContent = (currentUser?.username || 'admin') + ' · ' + modeLabel;
+  if(isLocalMode){
+    // Show a banner so admin knows backend isn't connected
+    const banner = document.createElement('div');
+    banner.id = 'local-mode-banner';
+    banner.style.cssText = 'background:rgba(245,166,35,.12);border-bottom:1px solid rgba(245,166,35,.3);padding:.5rem 1.5rem;font-size:.72rem;color:#f59e0b;letter-spacing:.5px;text-align:center;flex-shrink:0';
+    banner.innerHTML = '⚠️ <strong>Local Mode</strong> — Backend offline. Showing orders from this browser only. Orders from other devices will not appear.';
+    $('app').insertBefore(banner, $('app').children[1]);
+  }
+  await refreshAll();
+  setInterval(refreshAll, 60000);
+}
+
+// ── REAL-TIME POLLING STATE ────────────────────────────────────
+let _knownOrderIds  = new Set();
+let _pollingStarted = false;
+let _audioUnlocked  = false;
+
+// Unlock audio on first user interaction (browser policy)
+document.addEventListener('click', () => { _audioUnlocked = true; }, { once:true });
+
+let _chimeMuted = localStorage.getItem('fo_chime_muted') === 'true';
+
+function toggleMute(){
+  _chimeMuted = !_chimeMuted;
+  localStorage.setItem('fo_chime_muted', _chimeMuted);
+  const btn = $('mute-btn');
+  if(btn){
+    btn.textContent = _chimeMuted ? '🔇' : '🔊';
+    btn.title = _chimeMuted ? 'Chime muted — click to unmute' : 'Click to mute chime';
+    btn.style.borderColor = _chimeMuted ? 'rgba(239,68,68,.5)' : '';
+    btn.style.color = _chimeMuted ? '#f87171' : '';
+  }
+}
+
+// Init mute button on load
+document.addEventListener('DOMContentLoaded', () => {
+  if(_chimeMuted){
+    const btn = $('mute-btn');
+    if(btn){ btn.textContent='🔇'; btn.style.borderColor='rgba(239,68,68,.5)'; btn.style.color='#f87171'; }
+  }
+});
+
+function playChime(){
+  if(!_audioUnlocked || _chimeMuted) return;
+  try{
+    // Programmatic beep using Web Audio API — works without a file
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 120, 240].forEach(delay => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0, ctx.currentTime + delay/1000);
+      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + delay/1000 + 0.04);
+      gain.gain.linearRampToValueAtTime(0,   ctx.currentTime + delay/1000 + 0.25);
+      osc.start(ctx.currentTime + delay/1000);
+      osc.stop(ctx.currentTime  + delay/1000 + 0.3);
+    });
+  } catch(_){}
+}
+
+function showNewOrderBanner(count){
+  const banner = $('audio-alert-banner') || (() => {
+    const b = document.createElement('div');
+    b.id = 'audio-alert-banner';
+    document.body.appendChild(b);
+    return b;
+  })();
+  banner.textContent = `🔔 ${count} NEW ORDER${count>1?'S':''} RECEIVED!`;
+  banner.classList.add('show');
+  clearTimeout(banner._t);
+  banner._t = setTimeout(() => banner.classList.remove('show'), 5000);
+}
+
+async function refreshAll(){
+  const prevIds = new Set(_knownOrderIds);
+  await loadOrders();
+  // After loadOrders, allOrders is fresh — detect new ones
+  if(_pollingStarted && prevIds.size > 0){
+    const newOnes = allOrders.filter(o => !prevIds.has(String(o.id||o.order_ref)));
+    if(newOnes.length > 0){
+      playChime();
+      showNewOrderBanner(newOnes.length);
+    }
+  }
+  // Update known IDs
+  _knownOrderIds = new Set(allOrders.map(o => String(o.id||o.order_ref)));
+  _pollingStarted = true;
+  // Refresh KDS if visible
+  if($('panel-kds')?.classList.contains('active')) renderKDS();
+}
+
+// ── RESTORE SESSION ON PAGE LOAD ──────────────────────────────
+(async()=>{
+  // Option A: valid JWT token in storage — try backend
+  if(authToken){
+    try{
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 4000);
+      const res = await apiFetch('/orders?limit=1');
+      if(res?.ok){
+        try{ const p=JSON.parse(atob(authToken.split('.')[1])); currentUser={username:p.username,role:p.role}; }catch(_){}
+        isLocalMode = false;
+        bootApp();
+        return;
+      }
+    } catch(_){}
+    authToken=''; localStorage.removeItem('fo_admin_token');
+  }
+  // Option B: local mode session still active
+  if(localStorage.getItem(LOCAL_ADMIN_KEY) === 'yes' || sessionStorage.getItem(LOCAL_ADMIN_KEY) === 'yes'){
+    isLocalMode = true;
+    currentUser = { username:'admin', role:'super' };
+    setApiOnline(false);
+    bootApp();
+  }
+})();
+
+// ── ORDERS ─────────────────────────────────────────────────
+async function loadOrders(){
+  if(isLocalMode){
+    // ── LOCAL MODE: read from localStorage (same store as customer site) ──
+    let raw = [];
+    try{ raw = JSON.parse(localStorage.getItem('fastone_orders') || '[]'); } catch(_){}
+    // Map localStorage order shape → API order shape
+    allOrders = (currentStatus === 'all' ? raw : raw.filter(o => o.status === currentStatus))
+      .map((o,i) => ({
+        id:               o.id || i,
+        order_ref:        o.id || ('FO-' + String(i+1).padStart(4,'0')),
+        customer_name:    o.customer?.name || '—',
+        customer_phone:   o.customer?.phone || '—',
+        delivery_address: o.customer?.address + (o.customer?.area ? ' | ' + o.customer.area : ''),
+        items_summary:    o.itemsStr || (o.items||[]).map(x=>`${x.qty}x ${x.name}`).join(', '),
+        total:            o.total || 0,
+        payment_method:   o.payment || 'Cash on Delivery',
+        jazz_proof_url:   o.jazzProof ? ('data:' + (o.jazzProofType||'image/jpeg') + ';base64,' + o.jazzProof) : null,
+        receipt_image_url:null,
+        payment_confirmed: o.confirmed ? 1 : 0,
+        status:           o.status || 'new',
+        created_at:       o.timestamp || new Date().toISOString(),
+      }));
+
+    // Compute stats from local data
+    const now = new Date().toDateString();
+    const todayOrders = raw.filter(o => new Date(o.timestamp||0).toDateString() === now);
+    statsData = {
+      new_count:     raw.filter(o=>o.status==='new').length,
+      today_count:   todayOrders.length,
+      today_revenue: todayOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+(o.total||0),0),
+      total:         raw.length,
+      delivered:     raw.filter(o=>o.status==='delivered').length,
+    };
+    updateStats();
+    renderOrdersTable(allOrders);
+    $('s-time').textContent = 'Local mode · ' + new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+    return;
+  }
+
+  // ── BACKEND MODE ──────────────────────────────────────────────
+  const statusParam = currentStatus==='all' ? '' : '&status='+currentStatus;
+  const res = await apiFetch('/orders?limit=200'+statusParam);
+  if(!res||!res.ok) return;
+  allOrders  = res.data.orders || [];
+  statsData  = res.data.stats  || {};
+  updateStats();
+  renderOrdersTable(allOrders);
+  $('s-time').textContent = 'Last refresh: '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── SAFE PRICE PARSER ─────────────────────────────────────────
+function safePrice(o){
+  const raw = o.total ?? o.totalPrice ?? o.total_price ?? o.subtotal ?? 0;
+  const n = parseFloat(raw);
+  return isNaN(n) ? 0 : n;
+}
+
+// ── DUAL-FORMAT DATE CHECKER ──────────────────────────────────
+// Accepts YYYY-MM-DD, DD/MM/YYYY, ISO strings, timestamps
+function isToday(dateVal){
+  if(!dateVal) return false;
+  const todayStr = new Date().toDateString();
+  // Try direct parse first (works for ISO / YYYY-MM-DD)
+  const direct = new Date(dateVal);
+  if(!isNaN(direct.getTime()) && direct.toDateString() === todayStr) return true;
+  // Try DD/MM/YYYY (backend legacy format)
+  if(typeof dateVal === 'string' && dateVal.includes('/')){
+    const parts = dateVal.split('/');
+    if(parts.length === 3){
+      // parts = [DD, MM, YYYY]
+      const d = new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
+      if(!isNaN(d.getTime()) && d.toDateString() === todayStr) return true;
+    }
+  }
+  return false;
+}
+
+// ── SAFE IMAGE URL PARSER ─────────────────────────────────────
+// Backend uses many different key names for JazzCash proofs
+function getProofUrl(o, baseUrl){
+  const raw = o.receipt_image_url || o.jazz_proof_url || o.receiptUrl ||
+              o.receipt || o.image || o.jazzProofUrl || o.jazzCashProof || null;
+  if(!raw) return null;
+  if(raw.startsWith('data:') || raw.startsWith('http')) return raw;
+  return baseUrl + raw;
+}
+
+// ── FRONTEND-COMPUTED STATS (source of truth) ─────────────────
+function updateStats(){
+  const todayOrders = allOrders.filter(o => isToday(o.created_at || o.order_date || o.orderDate || o.timestamp));
+  const newCount     = allOrders.filter(o => o.status === 'new').length;
+  const deliveredCount = allOrders.filter(o => o.status === 'delivered').length;
+  const todayRevenue = todayOrders
+    .filter(o => o.status !== 'cancelled')
+    .reduce((sum, o) => sum + safePrice(o), 0);
+
+  $('s-new').textContent       = newCount;
+  $('s-today').textContent     = todayOrders.length;
+  $('s-revenue').textContent   = fmtRs(todayRevenue);
+  $('s-total').textContent     = allOrders.length;
+  $('s-delivered').textContent = deliveredCount;
+  $('nb-all').textContent      = allOrders.length;
+  $('nb-new').textContent      = newCount;
+  $('ft-all').textContent      = allOrders.length ? ' ('+allOrders.length+')' : '';
+  $('ft-new').textContent      = newCount ? ' ('+newCount+')' : '';
+}
+
+function renderOrdersTable(orders){
+  const tbody=$('orders-tbody'); tbody.innerHTML='';
+  if(!orders.length){
+    tbody.innerHTML='<tr><td colspan="13" style="text-align:center;padding:48px;color:var(--muted);letter-spacing:2px;font-size:.78rem">NO ORDERS FOUND</td></tr>';
+    return;
+  }
+  orders.forEach((o,idx)=>{
+    // Build proof thumbnails — show both WhatsApp receipt and website upload
+    // ── Safe image net — checks all possible backend key names ──
+    const _proofUrl1 = getProofUrl({
+      receipt_image_url: o.receipt_image_url, jazz_proof_url: o.jazz_proof_url,
+      receiptUrl: o.receiptUrl, receipt: o.receipt, image: o.image,
+      jazzProofUrl: o.jazzProofUrl, jazzCashProof: o.jazzCashProof
+    }, BASE_URL);
+    let proofHtml = '<span style="color:var(--muted);font-size:.7rem">—</span>';
+    const proofs=[];
+    if(o.receipt_image_url) proofs.push({url:getProofUrl({receipt_image_url:o.receipt_image_url},BASE_URL), label:'WhatsApp'});
+    if(!o.receipt_image_url && _proofUrl1) proofs.push({url:_proofUrl1, label:'Payment Proof'});
+    if(o.jazz_proof_url && o.jazz_proof_url !== o.receipt_image_url)
+      proofs.push({url:o.jazz_proof_url.startsWith('data:')?o.jazz_proof_url:BASE_URL+o.jazz_proof_url, label:'Website Upload'});
+    if(proofs.length){
+      proofHtml=proofs.filter(p=>p.url).map(p=>`<img class="proof-thumb" src="${p.url}" title="${p.label}" onclick="openLightbox('${p.url}','${p.label}')">`).join('');
+    }
+
+    const isNew = o.status==='new';
+    const waPhone = '92' + String(o.customer_phone||'').replace(/^0/,'').replace(/\D/g,'');
+    const waMsg   = encodeURIComponent(`Hi ${o.customer_name}, this is Fast One regarding your order ${o.order_ref}. `);
+    const waLink  = `https://wa.me/${waPhone}?text=${waMsg}`;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--muted);font-size:.65rem">${orders.length-idx}</td>
+      <td class="col-ref">${isNew?'<span class="new-indicator"></span>':''}${o.order_ref}</td>
+      <td class="col-name">${o.customer_name}</td>
+      <td>
+        <a href="${waLink}" target="_blank" rel="noopener"
+           style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:.7rem;text-decoration:none;display:flex;align-items:center;gap:4px"
+           title="Open WhatsApp">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          ${o.customer_phone}
+        </a>
+      </td>
+      <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${o.delivery_address||''}">${o.delivery_address||'—'}</td>
+      <td class="col-items" title="${o.items_summary||''}">${o.items_summary||'—'}</td>
+      <td class="col-date">${fmtDate(o.created_at).replace('\n','<br>')}</td>
+      <td>${o.payment_method}</td>
+      <td style="min-width:54px">${proofHtml}</td>
+      <td style="font-weight:800;color:var(--gold)">${fmtRs(safePrice(o))}</td>
+      <td>
+        <select class="tbl-select" onchange="updateStatus(${o.id},this.value)">
+          ${['new','confirmed','preparing','out_for_delivery','delivered','cancelled'].map(s=>
+            `<option value="${s}" ${o.status===s?'selected':''}>${statusLabel(s)}</option>`
+          ).join('')}
+        </select>
+      </td>
+      <td>
+        <select class="tbl-select ${o.payment_confirmed?'confirm-true':'confirm-false'}"
+                onchange="updateConfirm(${o.id},this.value,this)">
+          <option value="false" ${!o.payment_confirmed?'selected':''}>FALSE</option>
+          <option value="true"  ${ o.payment_confirmed?'selected':''}>TRUE</option>
+        </select>
+      </td>
+      <td style="white-space:nowrap">
+        <button class="print-btn" onclick="printReceipt(${JSON.stringify(o).replace(/"/g,'&quot;')})" title="Print receipt">🖨️</button>
+        <button class="del-btn" onclick="deleteOrder(${o.id},this)" title="Delete order">🗑</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function updateStatus(id, status){
+  if(isLocalMode){
+    localUpdateOrder(id, o => { o.status = status; });
+    toast('✅ Order updated → ' + status);
+    return;
+  }
+  const res = await apiFetch('/orders/'+id, { method:'PATCH', body:JSON.stringify({status}) });
+  if(res?.ok) toast('✅ Order updated → '+status);
+  else toast('❌ Update failed');
+}
+
+async function updateConfirm(id, val, el){
+  el.className='tbl-select '+(val==='true'?'confirm-true':'confirm-false');
+  if(isLocalMode){
+    localUpdateOrder(id, o => { o.confirmed = (val==='true'); });
+    toast('✅ Confirmation set to ' + val.toUpperCase());
+    return;
+  }
+  const row = el.closest('tr');
+  const statusSel = row.querySelector('.tbl-select:not([onchange*="Confirm"])');
+  const status = statusSel?.value || 'new';
+  const res = await apiFetch('/orders/'+id, { method:'PATCH', body:JSON.stringify({status, confirmed:val==='true'}) });
+  if(res?.ok) toast('✅ Confirmation set to '+val.toUpperCase());
+  else toast('❌ Update failed');
+}
+
+async function deleteOrder(id, btn){
+  if(!confirm('Permanently delete this order?')) return;
+  if(isLocalMode){
+    const raw = JSON.parse(localStorage.getItem('fastone_orders')||'[]');
+    const filtered = raw.filter(o => (o.id !== id && o.id !== String(id)));
+    localStorage.setItem('fastone_orders', JSON.stringify(filtered));
+    btn.closest('tr').remove();
+    toast('🗑 Order deleted');
+    loadOrders();
+    return;
+  }
+  const res = await apiFetch('/orders/'+id, {method:'DELETE'});
+  if(res?.ok){ btn.closest('tr').remove(); toast('🗑 Order deleted'); }
+  else toast('❌ Delete failed');
+}
+
+// ── LOCAL MODE ORDER UPDATER ──────────────────────────────────
+function localUpdateOrder(id, mutateFn){
+  try{
+    const raw = JSON.parse(localStorage.getItem('fastone_orders')||'[]');
+    const order = raw.find(o => o.id === id || o.id === String(id));
+    if(order){ mutateFn(order); localStorage.setItem('fastone_orders', JSON.stringify(raw)); }
+    loadOrders();
+  } catch(_){}
+}
+
+// ── FILTER TABS ─────────────────────────────────────────────
+document.querySelectorAll('.filter-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentStatus = btn.dataset.status;
+    loadOrders();
+  });
+});
+
+// ── SIDEBAR NAV ─────────────────────────────────────────────
+document.querySelectorAll('.nav-btn[data-panel]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    const targetPanel = $('panel-'+btn.dataset.panel);
+    if(targetPanel) targetPanel.classList.add('active');
+    // Lazy-load panel data
+    if(btn.dataset.panel === 'kds')       renderKDS();
+    if(btn.dataset.panel === 'menu-mgmt') loadMenuItems();
+    if(btn.dataset.filter){
+      currentStatus = btn.dataset.filter;
+      document.querySelectorAll('.filter-tab').forEach(t=>{
+        t.classList.toggle('active', t.dataset.status===currentStatus);
+      });
+      loadOrders();
+    }
+  });
+});
+
+// ── SEARCH ──────────────────────────────────────────────────
+async function doSearch(){
+  const q    = $('search-q').value.trim().toLowerCase();
+  const type = $('search-type').value;
+  if(!q){ toast('⚠️ Enter a search term'); return; }
+
+  const btn = $('search-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>';
+
+  // ── Search allOrders locally first (instant, works offline) ──
+  let matched = [];
+  if(allOrders.length){
+    matched = allOrders.filter(o=>{
+      const name  = String(o.customer_name || o.customerName || '').toLowerCase();
+      const phone = String(o.customer_phone || o.customerNumber || o.phone || '').replace(/\D/g,'');
+      const ref   = String(o.order_ref || o.orderId || o.id || '').toLowerCase();
+      const addr  = String(o.delivery_address || o.customerAddress || '').toLowerCase();
+      if(type==='phone')     return phone.includes(q.replace(/\D/g,''));
+      if(type==='order_ref') return ref.includes(q);
+      if(type==='name')      return name.includes(q);
+      // default: search all fields
+      return name.includes(q) || phone.includes(q.replace(/\D/g,'')) || ref.includes(q) || addr.includes(q);
+    });
+  }
+
+  // ── Also try backend if online ──
+  let backendCustomers = null;
+  if(!isLocalMode){
+    try{
+      const res = await apiFetch('/search?'+new URLSearchParams({q,type}));
+      if(res?.ok && res.data.found) backendCustomers = res.data.customers;
+    }catch(_){}
+  }
+
+  btn.disabled=false; btn.textContent='Search →';
+
+  // Backend result takes precedence; fall back to local
+  if(backendCustomers){
+    renderSearchResults(backendCustomers);
+    return;
+  }
+
+  if(!matched.length){
+    $('search-results').innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No results for "${$('search-q').value.trim()}"</div><div class="empty-sub">Try a different phone, name, or order ref</div></div>`;
+    return;
+  }
+
+  // Group local results by customer phone
+  const byPhone = {};
+  matched.forEach(o=>{
+    const phone = o.customer_phone || o.customerNumber || 'unknown';
+    if(!byPhone[phone]) byPhone[phone]={
+      customer:{
+        id: phone, name: o.customer_name||o.customerName||'—',
+        phone, area: o.delivery_area||'', address: o.delivery_address||o.customerAddress||'',
+        notes:'', totalOrders:0, totalSpent:0, firstSeen:null, lastSeen:null
+      },
+      orders:[]
+    };
+    byPhone[phone].orders.push({
+      id: o.id, orderRef: o.order_ref||o.id,
+      itemsSummary: o.items_summary||o.customerOrder||'',
+      total: safePrice(o), paymentMethod: o.payment_method||o.paymentMethod||'',
+      status: o.status||'new', source: o.source||'website',
+      createdAt: o.created_at||o.timestamp||'',
+      address: o.delivery_address||'', area: o.delivery_area||'',
+      notes: o.notes||'', paymentConfirmed: o.payment_confirmed||false,
+      receiptImageUrl: o.receipt_image_url||null, jazzProofUrl: o.jazz_proof_url||null
+    });
+    byPhone[phone].customer.totalOrders++;
+    byPhone[phone].customer.totalSpent += safePrice(o);
+    const ts = o.created_at||o.timestamp;
+    if(ts){
+      if(!byPhone[phone].customer.firstSeen || ts < byPhone[phone].customer.firstSeen)
+        byPhone[phone].customer.firstSeen = ts;
+      if(!byPhone[phone].customer.lastSeen || ts > byPhone[phone].customer.lastSeen)
+        byPhone[phone].customer.lastSeen = ts;
+    }
+  });
+  // Sort orders newest first within each customer
+  Object.values(byPhone).forEach(g => g.orders.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)));
+  renderSearchResults(Object.values(byPhone));
+}
+
+function renderSearchResults(customers){
+  const container=$('search-results'); container.innerHTML='';
+  customers.forEach(({customer:c, orders})=>{
+    const section=document.createElement('div');
+
+    const latestStatus = orders[0]?.status || '';
+    section.innerHTML=`
+      <div class="profile-card">
+        <div>
+          <div class="profile-name">${c.name}</div>
+          <div class="profile-phone">${c.phone}</div>
+          <div class="profile-stats">
+            <div class="pstat"><div class="pstat-val gold">${c.totalOrders}</div><div class="pstat-key">Total Orders</div></div>
+            <div class="pstat"><div class="pstat-val gold">${fmtRs(c.totalSpent)}</div><div class="pstat-key">Total Spent</div></div>
+            <div class="pstat"><div class="pstat-val">${c.area||'—'}</div><div class="pstat-key">Area</div></div>
+            <div class="pstat"><div class="pstat-val">${c.firstSeen ? new Date(c.firstSeen).toLocaleDateString('en-GB') : '—'}</div><div class="pstat-key">First Order</div></div>
+            <div class="pstat"><div class="pstat-val">${c.lastSeen ? new Date(c.lastSeen).toLocaleDateString('en-GB') : '—'}</div><div class="pstat-key">Last Active</div></div>
+          </div>
+          <div class="profile-addr">📍 ${c.address||'No address on file'}</div>
+          <div class="notes-row" style="margin-top:12px">
+            <input class="notes-input" id="note-${c.id}" value="${c.notes||''}" placeholder="Add admin note about this customer…">
+            <button class="notes-save" onclick="saveNote(${c.id})">Save Note</button>
+          </div>
+        </div>
+        <div>${statusPill(latestStatus)}</div>
+      </div>
+
+      <div class="history-label">Order History (${orders.length})</div>
+      <div class="timeline">
+        ${orders.length===0
+          ? '<div style="color:var(--muted);font-size:.78rem;padding:16px 4px">No orders yet</div>'
+          : orders.map(o=>{
+              let proofHtml='';
+              if(o.receiptImageUrl) proofHtml+=`<img class="proof-thumb" src="${BASE_URL+o.receiptImageUrl}" title="WhatsApp Receipt" onclick="openLightbox('${BASE_URL+o.receiptImageUrl}','WhatsApp Receipt')">`;
+              if(o.jazzProofUrl)   proofHtml+=`<img class="proof-thumb" src="${o.jazzProofUrl.startsWith('data:')?o.jazzProofUrl:BASE_URL+o.jazzProofUrl}" title="Website Upload" onclick="openLightbox('${o.jazzProofUrl.startsWith('data:')?o.jazzProofUrl:BASE_URL+o.jazzProofUrl}','Website Upload')">`;
+              return `
+              <div class="t-row">
+                <div>
+                  <div class="t-ref">${o.orderRef}</div>
+                  <div class="t-date">${o.createdAt?new Date(o.createdAt).toLocaleDateString('en-GB')+' '+new Date(o.createdAt).toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}):''}</div>
+                  <div class="t-source">${o.source||'whatsapp'}</div>
+                </div>
+                <div>
+                  <div class="t-items">${o.itemsSummary}</div>
+                  <div class="t-meta">
+                    <span class="t-total">${fmtRs(o.total)}</span>
+                    <span class="t-payment">· ${o.paymentMethod}</span>
+                    ${statusPill(o.status)}
+                    ${o.paymentConfirmed?'<span class="t-paid">✓ PAID</span>':''}
+                    ${o.notes?`<span class="t-notes">📝 ${o.notes}</span>`:''}
+                  </div>
+                  <div style="font-size:.68rem;color:var(--muted);margin-top:6px">📍 ${o.address||'—'}${o.area?' · '+o.area:''}</div>
+                </div>
+                <div class="t-actions">
+                  ${proofHtml}
+                  <select class="tbl-select" onchange="updateStatus(${o.id},this.value)">
+                    ${['new','confirmed','preparing','out_for_delivery','delivered','cancelled'].map(s=>
+                      `<option value="${s}" ${o.status===s?'selected':''}>${statusLabel(s)}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+              </div>`;
+            }).join('')
+        }
+      </div>
+    `;
+    container.appendChild(section);
+  });
+}
+
+async function saveNote(customerId){
+  const notes=$('note-'+customerId).value;
+  const res=await apiFetch('/customers/'+customerId+'/notes',{method:'PATCH',body:JSON.stringify({notes})});
+  if(res?.ok) toast('✅ Note saved'); else toast('❌ Failed to save note');
+}
+
+function jumpToSearch(phone){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('.nav-btn[data-panel="search"]').classList.add('active');
+  $('panel-search').classList.add('active');
+  $('search-q').value=phone;
+  $('search-type').value='phone';
+  doSearch();
+}
+
+// ── EXPORT CSV ──────────────────────────────────────────────
+function exportCSV(){
+  if(!allOrders.length){ toast('⚠️ No orders to export'); return; }
+  const headers=['Order Ref','Customer Name','Phone','Address','Items','Date','Payment','Total','Status','Confirmed'];
+  const rows=allOrders.map(o=>[
+    o.order_ref,o.customer_name,o.customer_phone,
+    o.delivery_address||'',o.items_summary||'',
+    o.created_at?new Date(o.created_at).toLocaleDateString('en-GB'):'',
+    o.payment_method,o.total,o.status,
+    o.payment_confirmed?'TRUE':'FALSE'
+  ]);
+  const csv=[headers,...rows].map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='FastOne_Orders_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('✅ CSV exported ('+allOrders.length+' orders)');
+}
+
+// ── LIGHTBOX ────────────────────────────────────────────────
+function openLightbox(src,label='Receipt'){
+  $('lightbox-img').src=src;
+  $('lightbox-label').textContent=label;
+  $('lightbox').classList.add('open');
+}
+$('lightbox-close').addEventListener('click',()=>$('lightbox').classList.remove('open'));
+$('lightbox').addEventListener('click',e=>{ if(e.target===$('lightbox')) $('lightbox').classList.remove('open'); });
+
+
+// ════════════════════════════════════════════════════════════════
+//  PRINT RECEIPT
+// ════════════════════════════════════════════════════════════════
+function printReceipt(o){
+  // Parse if it came as a string
+  if(typeof o === 'string') try { o = JSON.parse(o); } catch(_){}
+
+  const date    = o.created_at ? new Date(o.created_at) : new Date();
+  const dateStr = date.toLocaleDateString('en-GB');
+  const timeStr = date.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+
+  // Parse items
+  let itemsHtml = '';
+  const itemsSrc = o.items_json || o.items_summary || '';
+  if(typeof itemsSrc === 'string' && itemsSrc.startsWith('[')){
+    try{
+      JSON.parse(itemsSrc).forEach(i=>{
+        const lineTotal = (i.price||0)*(i.qty||1);
+        itemsHtml += `<div class="rcp-item"><span>${i.qty||1}x ${i.name}${i.size?' ('+i.size+')':''}</span><span>Rs ${lineTotal.toLocaleString()}</span></div>`;
+      });
+    }catch(_){ itemsHtml = `<div class="rcp-item"><span>${o.items_summary||''}</span><span></span></div>`; }
+  } else {
+    const lines = String(o.items_summary||o.customerOrder||'').split(',');
+    lines.forEach(l=>{ itemsHtml += `<div class="rcp-item"><span>${l.trim()}</span><span></span></div>`; });
+  }
+
+  $('receipt-area').innerHTML = `
+    <div class="rcp-brand">⚡ FAST ONE</div>
+    <div class="rcp-tagline">Pizza · Burgers · Shawarma · Fries</div>
+    <div class="rcp-tagline">Wapda City, Faisalabad · 0316-7090918</div>
+    <hr class="rcp-divider">
+    <div class="rcp-meta"><b>Order:</b> ${o.order_ref||'—'}</div>
+    <div class="rcp-meta"><b>Date:</b>  ${dateStr}  <b>Time:</b> ${timeStr}</div>
+    <hr class="rcp-divider">
+    <div class="rcp-meta"><b>Customer:</b> ${o.customer_name||o.customerName||'—'}</div>
+    <div class="rcp-meta"><b>Phone:</b> ${o.customer_phone||o.customerNumber||'—'}</div>
+    <div class="rcp-meta"><b>Address:</b> ${o.delivery_address||o.customerAddress||'—'}</div>
+    <hr class="rcp-divider">
+    <div class="rcp-section">ITEMS</div>
+    ${itemsHtml}
+    <hr class="rcp-divider">
+    <div class="rcp-total"><span>TOTAL</span><span>Rs ${parseFloat(o.total||0).toLocaleString()}</span></div>
+    <div class="rcp-meta" style="margin-top:4px"><b>Payment:</b> ${o.payment_method||o.paymentMethod||'—'}</div>
+    ${o.payment_confirmed?'<div class="rcp-meta" style="color:#000;font-weight:900">✓ PAYMENT CONFIRMED</div>':''}
+    <hr class="rcp-divider">
+    <div class="rcp-footer">Thank you for choosing Fast One!</div>
+    <div class="rcp-footer">Managed by NoMansAi</div>
+  `;
+  $('receipt-area').style.display = 'block';
+  setTimeout(()=>{ window.print(); $('receipt-area').style.display='none'; }, 120);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  KITCHEN DISPLAY SYSTEM (KDS)
+// ════════════════════════════════════════════════════════════════
+function renderKDS(){
+  const grid = $('kds-grid');
+  if(!grid) return;
+  // Show only new + confirmed orders
+  const active = allOrders.filter(o => o.status==='new' || o.status==='confirmed');
+  $('nb-kds').textContent = active.length;
+  if(!active.length){
+    grid.innerHTML='<div class="kds-empty">No active orders right now 🎉<br><span style="font-size:.75rem;color:var(--muted)">New and confirmed orders will appear here</span></div>';
+    return;
+  }
+  grid.innerHTML='';
+  active.forEach(o=>{
+    const created  = o.created_at ? new Date(o.created_at) : new Date();
+    const elapsedMs= Date.now() - created.getTime();
+    const elapsedMin = Math.floor(elapsedMs/60000);
+    const elapsedStr = elapsedMin < 1 ? 'just now' : elapsedMin + ' min' + (elapsedMin>1?'s':'') + ' ago';
+    const urgent     = elapsedMin >= 15;
+
+    // Parse items for display
+    let itemsHtml='';
+    const itemsSrc = o.items_json || o.items_summary || '';
+    if(typeof itemsSrc === 'string' && itemsSrc.startsWith('[')){
+      try{
+        JSON.parse(itemsSrc).forEach(i=>{
+          itemsHtml+=`<div class="kds-item-line"><span class="kds-item-qty">${i.qty||1}</span><span>${i.name}${i.size?' · '+i.size:''}</span></div>`;
+        });
+      }catch(_){ itemsHtml=`<div>${o.items_summary||''}</div>`; }
+    } else {
+      String(o.items_summary||'').split(',').forEach(l=>{
+        if(l.trim()) itemsHtml+=`<div class="kds-item-line"><span class="kds-item-qty">1</span><span>${l.trim()}</span></div>`;
+      });
+    }
+
+    const card = document.createElement('div');
+    card.className = `kds-card status-${o.status}`;
+    card.dataset.id = o.id;
+    card.innerHTML = `
+      <div class="kds-hdr">
+        <div class="kds-ref">${o.order_ref}</div>
+        <div class="kds-elapsed${urgent?' urgent':''}">${elapsedStr}</div>
+      </div>
+      <div style="font-size:.62rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">${o.source||'website'} · ${statusLabel(o.status)}</div>
+      <div class="kds-items">${itemsHtml||'<span style="color:var(--muted)">—</span>'}</div>
+      <button class="kds-mark-btn" onclick="kdsMarkPreparing(${o.id},this)">
+        ✓ Mark as Preparing
+      </button>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Update elapsed every 30s while KDS is visible
+  clearTimeout(renderKDS._timer);
+  renderKDS._timer = setTimeout(()=>{ if($('panel-kds')?.classList.contains('active')) renderKDS(); }, 30000);
+}
+
+async function kdsMarkPreparing(id, btn){
+  btn.disabled = true; btn.textContent = 'Updating…';
+  await updateStatus(id, 'preparing');
+  // Remove card from KDS
+  btn.closest('.kds-card').style.transition='opacity .3s,transform .3s';
+  btn.closest('.kds-card').style.opacity='0';
+  btn.closest('.kds-card').style.transform='scale(.92)';
+  setTimeout(()=>renderKDS(), 350);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  MENU MANAGEMENT
+// ════════════════════════════════════════════════════════════════
+let menuItems = [];
+let menuActiveCat = 'all';
+
+// Mock data — replace with real API when backend ready
+const MOCK_MENU = [
+  {id:1,name:'Chicken Pizza',category:'Pizza',price:450,available:true,image:'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&h=180&fit=crop'},
+  {id:2,name:'Zinger Burger',category:'Burgers',price:400,available:true,image:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=180&fit=crop'},
+  {id:3,name:'Chicken Shawarma',category:'Shawarma',price:270,available:true,image:'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=300&h=180&fit=crop'},
+  {id:4,name:'Crispy Wings',category:'Chicken',price:650,available:true,image:'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=300&h=180&fit=crop'},
+  {id:5,name:'Loaded Fries',category:'Fries',price:600,available:false,image:'https://images.unsplash.com/photo-1573080496219-bb964701c394?w=300&h=180&fit=crop'},
+  {id:6,name:'Chicken Pasta',category:'Pasta & More',price:500,available:true,image:'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=300&h=180&fit=crop'},
+  {id:7,name:'Fast One Special',category:'Pizza',price:550,available:true,image:'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=300&h=180&fit=crop'},
+  {id:8,name:'Tower Burger',category:'Burgers',price:550,available:true,image:'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=300&h=180&fit=crop'},
+];
+
+async function loadMenuItems(){
+  try{
+    const res = await apiFetch('/menu');
+    menuItems = res?.ok ? (res.data.items||res.data||[]) : MOCK_MENU;
+  }catch(_){ menuItems = MOCK_MENU; }
+  renderMenuCatTabs();
+  renderMenuGrid();
+}
+
+function renderMenuCatTabs(){
+  const cats = ['all', ...new Set(menuItems.map(i=>i.category))];
+  const container = $('menu-cat-tabs');
+  if(!container) return;
+  container.innerHTML='';
+  cats.forEach(c=>{
+    const btn = document.createElement('button');
+    btn.className='menu-cat-tab'+(c===menuActiveCat?' active':'');
+    btn.textContent = c==='all' ? 'All Items' : c;
+    btn.onclick=()=>{ menuActiveCat=c; renderMenuCatTabs(); renderMenuGrid(); };
+    container.appendChild(btn);
+  });
+}
+
+function renderMenuGrid(){
+  const grid = $('menu-items-grid');
+  if(!grid) return;
+  const filtered = menuActiveCat==='all' ? menuItems : menuItems.filter(i=>i.category===menuActiveCat);
+  if(!filtered.length){ grid.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No items</div></div>'; return; }
+  grid.innerHTML='';
+  filtered.forEach(item=>{
+    const card = document.createElement('div');
+    card.className='menu-item-card'+(item.available?'':' unavailable');
+    card.innerHTML=`
+      <img class="mic-img" src="${item.image||''}" alt="${item.name}" onerror="this.style.display='none'">
+      <div class="mic-body">
+        <div class="mic-cat">${item.category}</div>
+        <div class="mic-name">${item.name}</div>
+        <div class="mic-price">Rs ${Number(item.price||0).toLocaleString()}</div>
+      </div>
+      <div class="mic-footer">
+        <div class="toggle-switch" onclick="toggleAvailability(${item.id})">
+          <button class="toggle-track${item.available?' on':''}">
+            <div class="toggle-thumb"></div>
+          </button>
+          <span class="toggle-label">${item.available?'Available':'Out of Stock'}</span>
+        </div>
+        <div class="mic-actions">
+          <button class="mic-edit-btn" onclick="editMenuItem(${item.id})">✏️ Edit</button>
+          <button class="mic-del-btn"  onclick="deleteMenuItem(${item.id})">🗑</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function toggleAvailability(id){
+  const item = menuItems.find(i=>i.id===id);
+  if(!item) return;
+  item.available = !item.available;
+  // POST to backend (mocked)
+  try{ await apiFetch('/menu/'+id, {method:'PATCH', body:JSON.stringify({available:item.available})}); }catch(_){}
+  renderMenuGrid();
+  toast(item.available ? '✅ '+item.name+' marked Available' : '⚠️ '+item.name+' marked Out of Stock');
+}
+
+function openAddItemModal(){
+  $('im-id').value=''; $('im-name').value=''; $('im-desc').value='';
+  $('im-price').value=''; $('im-image').value=''; $('im-available').checked=true;
+  $('item-modal-title').textContent='ADD ITEM';
+  $('item-modal-overlay').style.display='flex';
+}
+
+function editMenuItem(id){
+  const item = menuItems.find(i=>i.id===id);
+  if(!item) return;
+  $('im-id').value=id; $('im-name').value=item.name;
+  $('im-desc').value=item.description||''; $('im-price').value=item.price;
+  $('im-image').value=item.image||''; $('im-available').checked=item.available;
+  $('im-category').value=item.category||'Burgers';
+  $('item-modal-title').textContent='EDIT ITEM';
+  $('item-modal-overlay').style.display='flex';
+}
+
+function closeItemModal(){ $('item-modal-overlay').style.display='none'; }
+
+async function saveMenuItem(){
+  const id     = $('im-id').value;
+  const payload = {
+    name:       $('im-name').value.trim(),
+    category:   $('im-category').value,
+    description:$('im-desc').value.trim(),
+    price:      parseFloat($('im-price').value)||0,
+    image:      $('im-image').value.trim(),
+    available:  $('im-available').checked,
+  };
+  if(!payload.name || !payload.price){ toast('⚠️ Name and price are required','error'); return; }
+
+  if(id){
+    // Update existing
+    try{ await apiFetch('/menu/'+id, {method:'PATCH', body:JSON.stringify(payload)}); }catch(_){}
+    const idx = menuItems.findIndex(i=>i.id===parseInt(id));
+    if(idx>=0) menuItems[idx]={...menuItems[idx],...payload};
+    toast('✅ Item updated');
+  } else {
+    // Add new
+    const newItem = { id:Date.now(), ...payload };
+    try{ const r=await apiFetch('/menu',{method:'POST',body:JSON.stringify(payload)}); if(r?.ok&&r.data?.id) newItem.id=r.data.id; }catch(_){}
+    menuItems.push(newItem);
+    toast('✅ Item added');
+  }
+  closeItemModal(); renderMenuCatTabs(); renderMenuGrid();
+}
+
+async function deleteMenuItem(id){
+  if(!confirm('Delete this menu item?')) return;
+  try{ await apiFetch('/menu/'+id, {method:'DELETE'}); }catch(_){}
+  menuItems = menuItems.filter(i=>i.id!==id);
+  renderMenuCatTabs(); renderMenuGrid();
+  toast('🗑 Item deleted');
+}
+
+// Close item modal on overlay click
+$('item-modal-overlay')?.addEventListener('click', e=>{ if(e.target===$('item-modal-overlay')) closeItemModal(); });
+
+// ── WIRE UP ─────────────────────────────────────────────────
+$('login-btn').addEventListener('click',doLogin);
+$('l-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+$('l-user').addEventListener('keydown',e=>{ if(e.key==='Enter') $('l-pass').focus(); });
+$('search-q').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+</script>
+<!-- ── RECEIPT PRINT AREA ── -->
+<div id="receipt-area" style="display:none"></div>
+
+<!-- ── ADD / EDIT MENU ITEM MODAL ── -->
+<div id="item-modal-overlay" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;width:100%;max-width:460px;overflow:hidden">
+    <div style="background:var(--red);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <span id="item-modal-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:#fff">ADD ITEM</span>
+      <button onclick="closeItemModal()" style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+      <input type="hidden" id="im-id">
+      <div><div class="form-label">Item Name *</div><input class="form-input" id="im-name" placeholder="e.g. Zinger Burger"></div>
+      <div><div class="form-label">Category *</div>
+        <select class="form-input" id="im-category" style="cursor:pointer">
+          <option value="Pizza">Pizza</option>
+          <option value="Burgers">Burgers</option>
+          <option value="Shawarma">Shawarma</option>
+          <option value="Chicken">Chicken</option>
+          <option value="Fries">Fries</option>
+          <option value="Pasta & More">Pasta & More</option>
+        </select>
+      </div>
+      <div><div class="form-label">Description</div><textarea class="form-input" id="im-desc" style="min-height:70px;resize:vertical" placeholder="Short description…"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div class="form-label">Price (Rs) *</div><input class="form-input" id="im-price" type="number" min="0" placeholder="450"></div>
+        <div><div class="form-label">Image URL</div><input class="form-input" id="im-image" placeholder="https://…"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="im-available" checked style="width:16px;height:16px;accent-color:var(--red)">
+        <label for="im-available" style="font-size:.75rem;font-weight:700;color:var(--muted);cursor:pointer">Mark as Available</label>
+      </div>
+      <button onclick="saveMenuItem()" class="login-btn" style="margin-top:4px">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<div id="audio-alert-banner" style="display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:8000;background:var(--red);color:#fff;font-size:.78rem;font-weight:800;letter-spacing:2px;padding:10px 22px;border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(212,22,26,.5)"></div>
+<!-- Silent audio for chime (base64 encoded short beep) -->
+<audio id="chime-audio" preload="auto">
+  <source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU" type="audio/wav">
+</audio>
+
+</body>
+</html>
