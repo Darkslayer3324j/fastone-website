@@ -188,6 +188,7 @@ a{color:inherit;text-decoration:none;}
 .data-table td:last-child{border-right:none;}
 .data-table tr:hover td{background:rgba(212,22,26,.04);}
 .col-ref{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);letter-spacing:1px;white-space:nowrap;}
+.local-order-row td:first-child{border-left:3px solid var(--gold)}
 .col-phone{font-family:'JetBrains Mono',monospace;font-size:.7rem;white-space:nowrap;}
 .col-name{font-weight:700;font-size:.8rem;}
 .col-items{max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -785,9 +786,13 @@ function togglePassword(){
   btn.style.color = show ? 'var(--gold)' : 'rgba(249,245,239,.35)';
 }
 
-// ── STANDALONE MODE CREDENTIALS (used when backend is offline) ──
-const LOCAL_ADMIN_USER = 'admin';
-const LOCAL_ADMIN_PASS = 'fastone2024';
+// ── OFFLINE MODE ───────────────────────────────────────────────
+// No credentials are checked here, on purpose. Offline mode only ever reads the
+// orders already present in THIS browser's localStorage, so there is no
+// server-side privilege to protect. A password compared in client-side JS is
+// theatre — anyone can read it from source or step past it in devtools — and
+// hardcoding one in a public repo is strictly worse than having none.
+// Real authentication happens on the backend, against /login.
 const LOCAL_ADMIN_KEY  = 'fo_local_admin';   // localStorage session key
 let   isLocalMode      = false;              // true = using localStorage, false = backend API
 
@@ -834,20 +839,24 @@ async function doLogin(){
     $('login-btn').textContent = 'Login to Admin Panel →';
   }
 
-  // ── 2. Backend offline — use local password check ─────────────
+  // ── 2. Backend offline — offer the explicitly unauthenticated local view ──
   if(!backendReachable){
-    if(username === LOCAL_ADMIN_USER && password === LOCAL_ADMIN_PASS){
-      isLocalMode = true;
-      currentUser = { username:'admin', role:'super' };
-      const rememberMeLocal = document.getElementById('remember-me')?.checked;
-      if(rememberMeLocal) localStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
-      else                sessionStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
-      setApiOnline(false);
-      bootApp();
-    } else {
-      $('login-error').textContent = 'Invalid credentials';
-    }
+    enterOfflineMode();
   }
+}
+
+// Enter the offline view. This is deliberately NOT authenticated: it shows only
+// the orders already stored in this browser and cannot reach server data. The
+// banner in bootApp() states this so the operator is never misled into thinking
+// they are logged in.
+function enterOfflineMode(){
+  isLocalMode = true;
+  currentUser = { username:'local', role:'local' };
+  const remember = document.getElementById('remember-me')?.checked;
+  if(remember) localStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
+  else         sessionStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
+  setApiOnline(false);
+  bootApp();
 }
 
 function logout(){
@@ -871,11 +880,11 @@ async function bootApp(){
     const banner = document.createElement('div');
     banner.id = 'local-mode-banner';
     banner.style.cssText = 'background:rgba(245,166,35,.12);border-bottom:1px solid rgba(245,166,35,.3);padding:.5rem 1.5rem;font-size:.72rem;color:#f59e0b;letter-spacing:.5px;text-align:center;flex-shrink:0';
-    banner.innerHTML = '⚠️ <strong>Local Mode</strong> — Backend offline. Showing orders from this browser only. Orders from other devices will not appear.';
+    banner.innerHTML = '⚠️ <strong>Offline Mode — not signed in</strong> — Backend unreachable, so no account was verified. Showing only orders saved in this browser; orders from other devices will not appear, and nothing here is sent to the server.';
     $('app').insertBefore(banner, $('app').children[1]);
   }
   await refreshAll();
-  setInterval(refreshAll, 60000);
+  setInterval(refreshAll, 30000);
 }
 
 // ── REAL-TIME POLLING STATE ────────────────────────────────────
@@ -978,10 +987,9 @@ async function refreshAll(){
   }
   // Option B: local mode session still active
   if(localStorage.getItem(LOCAL_ADMIN_KEY) === 'yes' || sessionStorage.getItem(LOCAL_ADMIN_KEY) === 'yes'){
-    isLocalMode = true;
-    currentUser = { username:'admin', role:'super' };
-    setApiOnline(false);
-    bootApp();
+    // Restores the offline view only. Never grants a privileged role: this flag
+    // lives in localStorage, so anything it unlocked would be self-service.
+    enterOfflineMode();
   }
 })();
 
@@ -1026,14 +1034,70 @@ async function loadOrders(){
   }
 
   // ── BACKEND MODE ──────────────────────────────────────────────
-  const statusParam = currentStatus==='all' ? '' : '&status='+currentStatus;
-  const res = await apiFetch('/orders?limit=200'+statusParam);
+  const statusParam = currentStatus === 'all' ? '' : '&status=' + currentStatus;
+  const res = await apiFetch('/orders?limit=200&source=all' + statusParam);
   if(!res||!res.ok) return;
-  allOrders  = res.data.orders || [];
-  statsData  = res.data.stats  || {};
+
+  let backendOrders = res.data.orders || [];
+  statsData = res.data.stats || {};
+
+  // ── MERGE: also pull localStorage website orders ──────────────
+  // This catches orders that were saved locally when the backend was
+  // unreachable. We deduplicate by order_ref so nothing doubles up.
+  try {
+    const localRaw = JSON.parse(localStorage.getItem('fastone_orders') || '[]');
+    if (localRaw.length > 0) {
+      // Build a set of order_refs already in the backend response
+      const backendRefs = new Set(backendOrders.map(o =>
+        String(o.order_ref || o.orderId || o.id || '')
+      ));
+
+      const localMapped = localRaw
+        .filter(o => {
+          const ref = String(o.id || o.order_ref || '');
+          if (!ref) return false;
+          // Only include if NOT already in backend
+          if (backendRefs.has(ref)) return false;
+          // Apply status filter
+          if (currentStatus !== 'all' && (o.status || 'new') !== currentStatus) return false;
+          return true;
+        })
+        .map((o, i) => ({
+          id:                o.id || ('local-' + i),
+          order_ref:         o.order_ref || o.id || ('FO-LOCAL-' + String(i+1).padStart(4,'0')),
+          customer_name:     o.customer_name  || o.customer?.name  || '—',
+          customer_phone:    o.customer_phone || o.customer?.phone || '—',
+          delivery_address:  o.delivery_address
+                              || ((o.customer?.address || '') + (o.customer?.area ? ' | ' + o.customer.area : '')),
+          items_summary:     o.items_summary  || o.itemsStr || '',
+          total:             o.total || 0,
+          payment_method:    o.payment_method || o.payment || 'Cash on Delivery',
+          jazz_proof_url:    o.jazz_proof_url
+                              || (o.jazzProof
+                                  ? ('data:' + (o.jazzProofType||'image/jpeg') + ';base64,' + o.jazzProof)
+                                  : null),
+          receipt_image_url: null,
+          payment_confirmed: o.payment_confirmed || (o.confirmed ? 1 : 0),
+          status:            o.status  || 'new',
+          source:            o.source  || 'website',
+          created_at:        o.created_at || o.timestamp || new Date().toISOString(),
+          _fromLocal:        true,   // flag so UI can optionally style differently
+        }));
+
+      if (localMapped.length > 0) {
+        // Prepend local orders (newest first) then backend orders
+        backendOrders = [...localMapped, ...backendOrders];
+        console.log(`[Admin] Merged ${localMapped.length} localStorage order(s) not yet in DB`);
+      }
+    }
+  } catch(mergeErr) {
+    console.warn('[Admin] localStorage merge failed:', mergeErr.message);
+  }
+
+  allOrders = backendOrders;
   updateStats();
   renderOrdersTable(allOrders);
-  $('s-time').textContent = 'Last refresh: '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+  $('s-time').textContent = 'Last refresh: ' + new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
 }
 
 // ── SAFE PRICE PARSER ─────────────────────────────────────────
@@ -1122,6 +1186,7 @@ function renderOrdersTable(orders){
     const waMsg   = encodeURIComponent(`Hi ${o.customer_name}, this is Fast One regarding your order ${o.order_ref}. `);
     const waLink  = `https://wa.me/${waPhone}?text=${waMsg}`;
     const tr=document.createElement('tr');
+    if(o._fromLocal) tr.classList.add('local-order-row');
     tr.innerHTML=`
       <td style="color:var(--muted);font-size:.65rem">${orders.length-idx}</td>
       <td class="col-ref">${isNew?'<span class="new-indicator"></span>':''}${o.order_ref}</td>
@@ -1573,16 +1638,91 @@ let menuActiveCat = 'all';
 
 // Mock data — replace with real API when backend ready
 const MOCK_MENU = [
-  {id:1,name:'Chicken Pizza',category:'Pizza',price:450,available:true,image:'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&h=180&fit=crop'},
-  {id:2,name:'Zinger Burger',category:'Burgers',price:400,available:true,image:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=180&fit=crop'},
-  {id:3,name:'Chicken Shawarma',category:'Shawarma',price:270,available:true,image:'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=300&h=180&fit=crop'},
-  {id:4,name:'Crispy Wings',category:'Chicken',price:650,available:true,image:'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=300&h=180&fit=crop'},
-  {id:5,name:'Loaded Fries',category:'Fries',price:600,available:false,image:'https://images.unsplash.com/photo-1573080496219-bb964701c394?w=300&h=180&fit=crop'},
-  {id:6,name:'Chicken Pasta',category:'Pasta & More',price:500,available:true,image:'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=300&h=180&fit=crop'},
-  {id:7,name:'Fast One Special',category:'Pizza',price:550,available:true,image:'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=300&h=180&fit=crop'},
-  {id:8,name:'Tower Burger',category:'Burgers',price:550,available:true,image:'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=300&h=180&fit=crop'},
-];
+  {id:101, name:'Chicken Fajita', category:'Pizza', price:500, available:true, image:''},
+  {id:102, name:'Chicken Tikka', category:'Pizza', price:500, available:true, image:''},
+  {id:103, name:'Vege Lover', category:'Pizza', price:500, available:true, image:''},
+  {id:104, name:'Chicken Supreme', category:'Pizza', price:500, available:true, image:''},
+  {id:105, name:'Hot & Spicy', category:'Pizza', price:500, available:true, image:''},
+  {id:106, name:'Super Special Supreme', category:'Pizza', price:500, available:true, image:''},
+  {id:107, name:'Special Malai Boti', category:'Pizza', price:600, available:true, image:''},
+  {id:108, name:'Fast One Special', category:'Pizza', price:600, available:true, image:''},
+  {id:109, name:'Chicken BBQ', category:'Pizza', price:500, available:true, image:''},
+  {id:110, name:'Jalapeno Pizza', category:'Pizza', price:500, available:true, image:''},
+  {id:111, name:'Special Nuggets Pizza', category:'Pizza', price:600, available:true, image:''},
+  {id:112, name:'Behari Kabab Pizza', category:'Pizza', price:550, available:true, image:''},
 
+  {id:201, name:'Cheese Chicken Stuffer', category:'Stuffer Pizzas', price:1350, available:true, image:''},
+  {id:202, name:'Kabab Stuffer', category:'Stuffer Pizzas', price:1350, available:true, image:''},
+  {id:203, name:'Malai Kabab Stuffer', category:'Stuffer Pizzas', price:1450, available:true, image:''},
+
+  {id:301, name:'Zinger Burger', category:'Burgers & Sandwiches', price:450, available:true, image:''},
+  {id:302, name:'Crunchy Burger', category:'Burgers & Sandwiches', price:450, available:true, image:''},
+  {id:303, name:'Jalapeno Burger', category:'Burgers & Sandwiches', price:480, available:true, image:''},
+  {id:304, name:'Tower Burger', category:'Burgers & Sandwiches', price:600, available:true, image:''},
+  {id:305, name:'Deker Burger', category:'Burgers & Sandwiches', price:470, available:true, image:''},
+  {id:306, name:'Crispy Patty Burger', category:'Burgers & Sandwiches', price:300, available:true, image:''},
+  {id:307, name:'Chappli Burger', category:'Burgers & Sandwiches', price:300, available:true, image:''},
+  {id:308, name:'Mexican Sandwich', category:'Burgers & Sandwiches', price:750, available:true, image:''},
+  {id:309, name:'Supreme Sandwich', category:'Burgers & Sandwiches', price:750, available:true, image:''},
+  {id:310, name:'Zinger Sandwich', category:'Burgers & Sandwiches', price:850, available:true, image:''},
+
+  {id:401, name:'Deal 1', category:'Deals', price:600, available:true, image:''},
+  {id:402, name:'Deal 2', category:'Deals', price:1000, available:true, image:''},
+  {id:403, name:'Deal 3', category:'Deals', price:600, available:true, image:''},
+  {id:404, name:'Deal 4', category:'Deals', price:650, available:true, image:''},
+  {id:405, name:'Deal 5', category:'Deals', price:450, available:true, image:''},
+  {id:406, name:'Deal 6', category:'Deals', price:600, available:true, image:''},
+
+  {id:501, name:'Crunchy Deal', category:'Combos', price:1800, available:true, image:''},
+  {id:502, name:'Golden Deal', category:'Combos', price:1800, available:true, image:''},
+  {id:503, name:'Chicken Pratha Deal', category:'Combos', price:1200, available:true, image:''},
+  {id:504, name:'Zinger Shawarma Deal', category:'Combos', price:1200, available:true, image:''},
+  {id:505, name:'Jambo Deal', category:'Combos', price:2100, available:true, image:''},
+  {id:506, name:'Nuggets Deal', category:'Combos', price:1500, available:true, image:''},
+  {id:507, name:'Regale Deal', category:'Combos', price:1200, available:true, image:''},
+  {id:508, name:'Zinger Pratha Deal', category:'Combos', price:1320, available:true, image:''},
+  {id:509, name:'Chappli Deal', category:'Combos', price:1200, available:true, image:''},
+  {id:510, name:'Deal 1 (Pizza)', category:'Combos', price:2600, available:true, image:''},
+  {id:511, name:'Deal 2 (Pizza)', category:'Combos', price:2250, available:true, image:''},
+  {id:512, name:'Deal 3 (Pizza)', category:'Combos', price:1900, available:true, image:''},
+  {id:513, name:'Deal 4 (Pizza)', category:'Combos', price:1800, available:true, image:''},
+  {id:514, name:'Deal 5 (Pizza)', category:'Combos', price:1450, available:true, image:''},
+  {id:515, name:'Deal 6 (Pizza)', category:'Combos', price:1050, available:true, image:''},
+
+  {id:601, name:'Chicken Pasta (Half)', category:'Pasta & More', price:500, available:true, image:''},
+  {id:602, name:'Chicken Pasta (Full)', category:'Pasta & More', price:700, available:true, image:''},
+  {id:603, name:'Chicken Nuggets', category:'Chicken', price:500, available:true, image:''},
+  {id:604, name:'Crispy Wings', category:'Chicken', price:700, available:true, image:''},
+  {id:605, name:'Thai Sauce Wings', category:'Chicken', price:750, available:true, image:''},
+  {id:606, name:'Oven Bake Wings', category:'Chicken', price:800, available:true, image:''},
+  {id:607, name:'Hot Shot', category:'Chicken', price:700, available:true, image:''},
+  {id:608, name:'Zinger Fries', category:'Fries', price:800, available:true, image:''},
+  {id:609, name:'Pizza Fries', category:'Fries', price:600, available:true, image:''},
+  {id:610, name:'Mayo Fries', category:'Fries', price:450, available:true, image:''},
+  {id:611, name:'Regular Fries (Small)', category:'Fries', price:250, available:true, image:''},
+  {id:612, name:'Loaded Fries', category:'Fries', price:700, available:true, image:''},
+  {id:613, name:'Masala Fries (Small)', category:'Fries', price:400, available:true, image:''},
+
+  {id:701, name:'Chicken Shawarma', category:'Shawarma & Rolls', price:250, available:true, image:''},
+  {id:702, name:'Chicken Achari Shawarma', category:'Shawarma & Rolls', price:270, available:true, image:''},
+  {id:703, name:'Zinger Shawarma', category:'Shawarma & Rolls', price:300, available:true, image:''},
+  {id:704, name:'Zinger Shawarma Special', category:'Shawarma & Rolls', price:350, available:true, image:''},
+  {id:705, name:'Chicken Kabab Shawarma', category:'Shawarma & Rolls', price:280, available:true, image:''},
+  {id:706, name:'Special Chicken Shawarma', category:'Shawarma & Rolls', price:300, available:true, image:''},
+  {id:707, name:'Shawarma Platter (3 Bread)', category:'Shawarma & Rolls', price:700, available:true, image:''},
+  {id:708, name:'Malai Boti Shawarma', category:'Shawarma & Rolls', price:380, available:true, image:''},
+  {id:709, name:'Chicken Paratha', category:'Shawarma & Rolls', price:300, available:true, image:''},
+  {id:710, name:'Chicken Achari Paratha', category:'Shawarma & Rolls', price:330, available:true, image:''},
+  {id:711, name:'Chicken Malai Boti Paratha', category:'Shawarma & Rolls', price:400, available:true, image:''},
+  {id:712, name:'Zinger Paratha', category:'Shawarma & Rolls', price:330, available:true, image:''},
+  {id:713, name:'Special Chicken Paratha', category:'Shawarma & Rolls', price:350, available:true, image:''},
+  {id:714, name:'Special Zinger Paratha', category:'Shawarma & Rolls', price:380, available:true, image:''},
+  {id:715, name:'Chicken Cheese Shawarma', category:'Shawarma & Rolls', price:300, available:true, image:''},
+  {id:716, name:'Shawarma Platter (4 Bread)', category:'Shawarma & Rolls', price:800, available:true, image:''},
+  {id:717, name:'Chicken Kabab Paratha', category:'Shawarma & Rolls', price:300, available:true, image:''},
+  {id:718, name:'Snacky Rap', category:'Shawarma & Rolls', price:500, available:true, image:''},
+  {id:719, name:'Spin Roll', category:'Shawarma & Rolls', price:450, available:true, image:''}
+];
 async function loadMenuItems(){
   try{
     const res = await apiFetch('/menu');
