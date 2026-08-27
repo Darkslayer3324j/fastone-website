@@ -785,9 +785,12 @@ function togglePassword(){
   btn.style.color = show ? 'var(--gold)' : 'rgba(249,245,239,.35)';
 }
 
-// ── STANDALONE MODE CREDENTIALS (used when backend is offline) ──
-const LOCAL_ADMIN_USER = 'admin';
-const LOCAL_ADMIN_PASS = 'fastone2024';
+// ── OFFLINE MODE ───────────────────────────────────────────────
+// No credentials are checked here, on purpose. Offline mode only ever reads the
+// orders already present in THIS browser's localStorage, so there is no
+// server-side privilege to protect. A password compared in client-side JS is
+// theatre — anyone can read it from source or step past it in devtools — and
+// hardcoding one in a public repo is strictly worse than having none.
 const LOCAL_ADMIN_KEY  = 'fo_local_admin';   // localStorage session key
 let   isLocalMode      = false;              // true = using localStorage, false = backend API
 
@@ -834,20 +837,22 @@ async function doLogin(){
     $('login-btn').textContent = 'Login to Admin Panel →';
   }
 
-  // ── 2. Backend offline — use local password check ─────────────
+  // ── 2. Backend offline — offer the explicitly unauthenticated local view ──
   if(!backendReachable){
-    if(username === LOCAL_ADMIN_USER && password === LOCAL_ADMIN_PASS){
-      isLocalMode = true;
-      currentUser = { username:'admin', role:'super' };
-      const rememberMeLocal = document.getElementById('remember-me')?.checked;
-      if(rememberMeLocal) localStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
-      else                sessionStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
-      setApiOnline(false);
-      bootApp();
-    } else {
-      $('login-error').textContent = 'Invalid credentials';
-    }
+    enterOfflineMode();
   }
+}
+
+// Enter the offline view. Deliberately NOT authenticated: it shows only the
+// orders already stored in this browser and cannot reach server data.
+function enterOfflineMode(){
+  isLocalMode = true;
+  currentUser = { username:'local', role:'local' };
+  const remember = document.getElementById('remember-me')?.checked;
+  if(remember) localStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
+  else         sessionStorage.setItem(LOCAL_ADMIN_KEY, 'yes');
+  setApiOnline(false);
+  bootApp();
 }
 
 function logout(){
@@ -976,12 +981,11 @@ async function refreshAll(){
     } catch(_){}
     authToken=''; localStorage.removeItem('fo_admin_token');
   }
-  // Option B: local mode session still active
+  // Option B: offline view still active
   if(localStorage.getItem(LOCAL_ADMIN_KEY) === 'yes' || sessionStorage.getItem(LOCAL_ADMIN_KEY) === 'yes'){
-    isLocalMode = true;
-    currentUser = { username:'admin', role:'super' };
-    setApiOnline(false);
-    bootApp();
+    // Restores the offline view only. Never grants a privileged role: this flag
+    // lives in localStorage, so anything it unlocked would be self-service.
+    enterOfflineMode();
   }
 })();
 
